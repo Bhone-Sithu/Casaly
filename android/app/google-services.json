@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "987100273832",
+    "project_id": "casaly-51546",
+    "storage_bucket": "casaly-51546.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:987100273832:android:ed1632e53112b81202369d",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsR-l0r8pqX681coGtd2-KR38jMxZP6AA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
