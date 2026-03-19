@@ -1,5 +1,0 @@
-
-enum LaundryMachineType {
-  washer,
-  dryer,
-}

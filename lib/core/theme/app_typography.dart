@@ -1,24 +1,23 @@
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 abstract class AppTypography {
-  static const _fontFamily = 'Inter';
-
   // Headings
-  static const h1 = TextStyle(fontSize: 24, fontWeight: FontWeight.w600, fontFamily: _fontFamily);
-  static const h2 = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, fontFamily: _fontFamily);
-  static const h3 = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: _fontFamily);
+  static final h1 = GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w600);
+  static final h2 = GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600);
+  static final h3 = GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600);
 
   // Body
-  static const bodyLg  = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, fontFamily: _fontFamily);
-  static const bodyMd  = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, fontFamily: _fontFamily);
-  static const bodySm  = TextStyle(fontSize: 12, fontWeight: FontWeight.w400, fontFamily: _fontFamily);
+  static final bodyLg  = GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400);
+  static final bodyMd  = GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400);
+  static final bodySm  = GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400);
 
   // Labels
-  static const labelLg = TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: _fontFamily);
-  static const labelMd = TextStyle(fontSize: 12, fontWeight: FontWeight.w500, fontFamily: _fontFamily);
-  static const labelSm = TextStyle(fontSize: 10, fontWeight: FontWeight.w500, fontFamily: _fontFamily);
+  static final labelLg = GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500);
+  static final labelMd = GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500);
+  static final labelSm = GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500);
 
   // Caption
-  static const caption = TextStyle(fontSize: 11, fontWeight: FontWeight.w400, fontFamily: _fontFamily);
+  static final caption = GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400);
 }
