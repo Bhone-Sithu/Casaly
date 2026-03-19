@@ -4,14 +4,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/features/auth/presentation/providers/auth_providers.dart';
-import 'package:myapp/features/auth/presentation/screens/login_screen.dart';
-import 'package:myapp/features/auth/presentation/screens/signup_screen.dart';
-import 'package:myapp/features/app/presentation/screens/app_router_screen.dart';
-import 'package:myapp/features/dorm/presentation/screens/create_dorm_screen.dart';
-import 'package:myapp/features/dorm/presentation/screens/dorm_dashboard_screen.dart';
-import 'package:myapp/features/dorm/presentation/screens/dorm_selection_screen.dart';
-import 'package:myapp/features/dorm/presentation/screens/join_dorm_screen.dart';
+import 'package:casaly/features/auth/presentation/providers/auth_providers.dart';
+import 'package:casaly/features/auth/presentation/screens/login_screen.dart';
+import 'package:casaly/features/auth/presentation/screens/signup_screen.dart';
+import 'package:casaly/features/app/presentation/screens/app_router_screen.dart';
+import 'package:casaly/features/dorm/presentation/screens/create_dorm_screen.dart';
+import 'package:casaly/features/dorm/presentation/screens/dorm_dashboard_screen.dart';
+import 'package:casaly/features/dorm/presentation/screens/dorm_selection_screen.dart';
+import 'package:casaly/features/dorm/presentation/screens/join_dorm_screen.dart';
+import 'package:casaly/features/user_profile/presentation/screens/user_profile_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -66,6 +67,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dorm',
         builder: (context, state) => const DormDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const UserProfileScreen(),
       ),
     ],
     redirect: (context, state) {

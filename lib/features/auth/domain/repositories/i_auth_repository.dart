@@ -1,5 +1,5 @@
 
-import 'package:myapp/features/auth/domain/entities/user.dart';
+import 'package:casaly/features/auth/domain/entities/user.dart';
 
 abstract class IAuthRepository {
   Stream<User?> get authStateChanges;

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/casaly_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../user_profile/presentation/widgets/settings_drawer.dart';
 import '../providers/dorm_providers.dart';
 
 class DormDashboardScreen extends ConsumerWidget {
@@ -60,14 +61,15 @@ class DormDashboardScreen extends ConsumerWidget {
                 backgroundColor: AppColors.cream50,
                 elevation: 0,
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.settings, color: AppColors.green400),
-                    onPressed: () {
-                      // TODO: Navigate to dorm settings
-                    },
+                  Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.settings, color: AppColors.green400),
+                      onPressed: () => Scaffold.of(context).openEndDrawer(),
+                    ),
                   ),
                 ],
               ),
+              endDrawer: const SettingsDrawer(),
               body: Padding(
                 padding: const EdgeInsets.all(AppSpacing.screenPadding),
                 child: Column(
@@ -207,30 +209,6 @@ class DormDashboardScreen extends ConsumerWidget {
                         onTap: () {
                           // TODO: Navigate to member management
                         },
-                      ),
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Leave dorm button
-                    TextButton(
-                      onPressed: () => _showLeaveDormDialog(context, ref, dorm.id),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: BorderSide(color: AppColors.error, width: 1.5),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xl,
-                          vertical: AppSpacing.md,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.button),
-                        ),
-                      ),
-                      child: Text(
-                        'Leave Dorm',
-                        style: AppTypography.labelLg.copyWith(
-                          color: AppColors.error,
-                        ),
                       ),
                     ),
                   ],

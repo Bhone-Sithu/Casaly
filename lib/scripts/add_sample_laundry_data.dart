@@ -1,8 +1,8 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:myapp/features/laundry/domain/entities/laundry_machine_status.dart';
-import 'package:myapp/features/laundry/domain/entities/laundry_machine_type.dart';
+import 'package:casaly/features/laundry/domain/entities/laundry_machine_status.dart';
+import 'package:casaly/features/laundry/domain/entities/laundry_machine_type.dart';
 
 Future<void> main() async {
   await Firebase.initializeApp();

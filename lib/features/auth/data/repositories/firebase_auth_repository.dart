@@ -3,10 +3,10 @@ import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:myapp/core/constants/firestore_paths.dart';
-import 'package:myapp/features/auth/data/models/user_model.dart';
-import 'package:myapp/features/auth/domain/entities/user.dart';
-import 'package:myapp/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:casaly/core/constants/firestore_paths.dart';
+import 'package:casaly/features/auth/data/models/user_model.dart';
+import 'package:casaly/features/auth/domain/entities/user.dart';
+import 'package:casaly/features/auth/domain/repositories/i_auth_repository.dart';
 
 class FirebaseAuthRepository implements IAuthRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;

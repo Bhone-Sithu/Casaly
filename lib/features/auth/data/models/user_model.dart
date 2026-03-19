@@ -1,5 +1,5 @@
 
-import 'package:myapp/features/auth/domain/entities/user.dart';
+import 'package:casaly/features/auth/domain/entities/user.dart';
 
 class UserModel extends User {
   const UserModel({

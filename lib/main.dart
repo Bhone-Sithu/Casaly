@@ -2,9 +2,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/router.dart';
-import 'package:myapp/core/theme/app_theme.dart';
-import 'package:myapp/firebase_options.dart';
+import 'package:casaly/app/router.dart';
+import 'package:casaly/core/theme/app_theme.dart';
+import 'package:casaly/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
