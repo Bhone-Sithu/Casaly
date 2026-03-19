@@ -47,6 +47,7 @@ abstract class AppColors {
   static const cream50  = Color(0xFFFFFAF0);  // ← Page background
   static const cream100 = Color(0xFFFFF3E0);  // ← Card highlight bg
   static const cream200 = Color(0xFFEDE0CC);  // ← Borders
+  static const cream300 = Color(0xFFD0C4B0);  // ← Light borders
   static const cream400 = Color(0xFFA09080);  // ← Placeholder text
   static const cream600 = Color(0xFF5A4E42);  // ← Secondary text
   static const cream800 = Color(0xFF302820);  // ← Primary text

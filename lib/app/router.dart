@@ -10,6 +10,7 @@ import 'package:casaly/features/auth/presentation/screens/signup_screen.dart';
 import 'package:casaly/features/app/presentation/screens/app_router_screen.dart';
 import 'package:casaly/features/dorm/presentation/screens/create_dorm_screen.dart';
 import 'package:casaly/features/dorm/presentation/screens/dorm_dashboard_screen.dart';
+import 'package:casaly/features/app/presentation/screens/main_shell_screen.dart';
 import 'package:casaly/features/dorm/presentation/screens/dorm_selection_screen.dart';
 import 'package:casaly/features/dorm/presentation/screens/join_dorm_screen.dart';
 import 'package:casaly/features/user_profile/presentation/screens/user_profile_screen.dart';
@@ -66,7 +67,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/dorm',
-        builder: (context, state) => const DormDashboardScreen(),
+        builder: (context, state) => const MainShellScreen(),
       ),
       GoRoute(
         path: '/profile',

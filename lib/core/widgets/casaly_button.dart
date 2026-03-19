@@ -4,7 +4,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-enum ButtonVariant { primary, secondary, outline, text }
+enum ButtonVariant { primary, secondary, outline, text, glass }
 
 class CasalyButton extends StatelessWidget {
   final String text;
@@ -84,6 +84,7 @@ class CasalyButton extends StatelessWidget {
         ButtonVariant.secondary => AppColors.cream200,
         ButtonVariant.outline => Colors.transparent,
         ButtonVariant.text => Colors.transparent,
+        ButtonVariant.glass => Colors.transparent,
       };
     }
 
@@ -92,6 +93,7 @@ class CasalyButton extends StatelessWidget {
       ButtonVariant.secondary => AppColors.orange400,
       ButtonVariant.outline => Colors.transparent,
       ButtonVariant.text => Colors.transparent,
+      ButtonVariant.glass => Colors.transparent,
     };
   }
 
@@ -105,6 +107,7 @@ class CasalyButton extends StatelessWidget {
       ButtonVariant.secondary => Colors.white,
       ButtonVariant.outline => AppColors.green400,
       ButtonVariant.text => AppColors.green400,
+      ButtonVariant.glass => AppColors.green400,
     };
   }
 

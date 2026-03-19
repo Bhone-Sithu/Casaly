@@ -8,6 +8,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/casaly_button.dart';
 import '../../../../core/widgets/casaly_text_field.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/glass_container.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/user_profile_providers.dart';
 import '../widgets/user_avatar.dart';
@@ -42,7 +44,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final userProfileAsync = ref.watch(currentUserProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.cream50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Profile',
@@ -50,10 +52,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             color: AppColors.green400,
           ),
         ),
-        backgroundColor: AppColors.cream50,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.green400),
+          icon: const Icon(Icons.chevron_left, color: AppColors.green400, size: 28),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -158,10 +160,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   const SizedBox(height: AppSpacing.xxxl),
 
                   // Form Fields
-                  Card(
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
+                  GlassCard(
+                    type: GlassType.neutral,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -208,7 +208,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           ),
                         ],
                       ),
-                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),

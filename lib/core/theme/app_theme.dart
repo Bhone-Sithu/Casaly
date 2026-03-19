@@ -6,11 +6,11 @@ class AppTheme {
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: AppColors.cream50,
+    scaffoldBackgroundColor: Colors.white,
     colorScheme: ColorScheme.light(
       primary: AppColors.green400,
       secondary: AppColors.orange400,
-      surface: AppColors.cream50,
+      surface: Colors.white,
       error: AppColors.berry400,
       onPrimary: Colors.white,
       onSecondary: Colors.white,

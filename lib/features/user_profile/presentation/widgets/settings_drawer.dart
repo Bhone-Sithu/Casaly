@@ -4,177 +4,39 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/glass_container.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../providers/user_profile_providers.dart';
-import 'user_avatar.dart';
 
 class SettingsDrawer extends ConsumerWidget {
   const SettingsDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProfileAsync = ref.watch(currentUserProfileProvider);
-
     return Drawer(
-      backgroundColor: AppColors.cream50,
+      backgroundColor: Colors.white,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header
-            Container(
+            GlassContainer(
+              type: GlassType.primary,
               padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: const BoxDecoration(
-                color: AppColors.green50,
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppColors.green200,
-                    width: 1,
-                  ),
-                ),
-              ),
+              margin: const EdgeInsets.all(AppSpacing.md),
+              borderRadius: 16,
               child: Row(
                 children: [
                   Text(
                     'Settings',
-                    style: AppTypography.h2.copyWith(
-                      color: AppColors.green400,
-                    ),
+                    style: AppTypography.h2.copyWith(color: AppColors.green400),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.green400,
-                    ),
+                    icon: const Icon(Icons.close, color: AppColors.green400),
                   ),
                 ],
-              ),
-            ),
-
-            // User Profile Section
-            userProfileAsync.when(
-              data: (userProfile) {
-                if (userProfile == null) {
-                  return Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Text(
-                          'Profile not found',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                return Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Card(
-                    color: Colors.white,
-                    elevation: 2,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        context.push('/profile');
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Row(
-                          children: [
-                            UserAvatar(
-                              userProfile: userProfile,
-                              size: 60,
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userProfile.displayNameOrEmail,
-                                    style: AppTypography.h3.copyWith(
-                                      color: AppColors.green400,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    userProfile.email,
-                                    style: AppTypography.bodyMd.copyWith(
-                                      color: AppColors.cream600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    'View Profile',
-                                    style: AppTypography.labelSm.copyWith(
-                                      color: AppColors.green400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color: AppColors.cream400,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              loading: () => Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(width: AppSpacing.md),
-                        Text('Loading profile...'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              error: (error, stack) => Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            'Error loading profile',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
             ),
 
@@ -211,7 +73,9 @@ class SettingsDrawer extends ConsumerWidget {
                       // TODO: Navigate to member management
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Member management not implemented yet'),
+                          content: Text(
+                            'Member management not implemented yet',
+                          ),
                           backgroundColor: AppColors.green400,
                         ),
                       );
@@ -226,7 +90,9 @@ class SettingsDrawer extends ConsumerWidget {
                       // TODO: Show leave dorm dialog
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Leave dorm functionality not implemented yet'),
+                          content: Text(
+                            'Leave dorm functionality not implemented yet',
+                          ),
                           backgroundColor: AppColors.orange400,
                         ),
                       );
@@ -246,7 +112,9 @@ class SettingsDrawer extends ConsumerWidget {
                       // TODO: Navigate to notification settings
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Notification settings not implemented yet'),
+                          content: Text(
+                            'Notification settings not implemented yet',
+                          ),
                           backgroundColor: AppColors.green400,
                         ),
                       );
@@ -300,22 +168,14 @@ class SettingsDrawer extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: const BoxDecoration(
                 border: Border(
-                  top: BorderSide(
-                    color: AppColors.cream200,
-                    width: 1,
-                  ),
+                  top: BorderSide(color: AppColors.cream200, width: 1),
                 ),
               ),
               child: ListTile(
-                leading: const Icon(
-                  Icons.logout,
-                  color: AppColors.error,
-                ),
+                leading: const Icon(Icons.logout, color: AppColors.error),
                 title: Text(
                   'Sign Out',
-                  style: AppTypography.labelLg.copyWith(
-                    color: AppColors.error,
-                  ),
+                  style: AppTypography.labelLg.copyWith(color: AppColors.error),
                 ),
                 onTap: () => _showSignOutDialog(context, ref),
               ),
@@ -351,28 +211,59 @@ class SettingsDrawer extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: AppColors.green400,
-        ),
-        title: Text(
-          title,
-          style: AppTypography.bodyLg,
-        ),
-        subtitle: Text(
-          subtitle,
-          style: AppTypography.bodySm.copyWith(
-            color: AppColors.cream600,
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          splashColor: AppColors.green400.withOpacity(0.1),
+          highlightColor: AppColors.green400.withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.green400.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: AppColors.green400, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTypography.bodyLg.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.cream800,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.cream600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: AppColors.cream400,
+                ),
+              ],
+            ),
           ),
         ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: AppColors.cream400,
-        ),
-        onTap: onTap,
       ),
     );
   }
@@ -424,16 +315,11 @@ class SettingsDrawer extends ConsumerWidget {
         color: AppColors.green400,
       ),
       children: [
-        Text(
-          'Shared living made simple',
-          style: AppTypography.bodyMd,
-        ),
+        Text('Shared living made simple', style: AppTypography.bodyMd),
         const SizedBox(height: AppSpacing.md),
         Text(
           'Casaly helps you manage your shared living space with features for cleaning schedules, laundry management, and dorm coordination.',
-          style: AppTypography.bodySm.copyWith(
-            color: AppColors.cream600,
-          ),
+          style: AppTypography.bodySm.copyWith(color: AppColors.cream600),
         ),
       ],
     );
