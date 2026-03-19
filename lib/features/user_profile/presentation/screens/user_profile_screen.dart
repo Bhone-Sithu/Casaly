@@ -49,13 +49,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         title: Text(
           'Profile',
           style: AppTypography.h2.copyWith(
-            color: AppColors.green400,
+            color: AppColors.primary,
           ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: AppColors.green400, size: 28),
+          icon: const Icon(Icons.chevron_left, color: AppColors.primary, size: 28),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -65,7 +65,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               child: Text(
                 'Edit',
                 style: AppTypography.labelMd.copyWith(
-                  color: AppColors.green400,
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -112,7 +112,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                   onTap: _isUploadingImage ? null : _selectProfileImage,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: _isUploadingImage ? AppColors.cream400 : AppColors.green400,
+                                      color: _isUploadingImage ? AppColors.cream400 : AppColors.primary,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -143,7 +143,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         Text(
                           userProfile.displayNameOrEmail,
                           style: AppTypography.h2.copyWith(
-                            color: AppColors.green400,
+                            color: AppColors.primary,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -168,7 +168,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           Text(
                             'Personal Information',
                             style: AppTypography.h3.copyWith(
-                              color: AppColors.green400,
+                              color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -325,7 +325,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             Text(
               'Select Profile Photo',
               style: AppTypography.h3.copyWith(
-                color: AppColors.green400,
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -333,7 +333,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.camera_alt, color: AppColors.green400),
+                    leading: const Icon(Icons.camera_alt, color: AppColors.primary),
                     title: Text('Take Photo', style: AppTypography.bodyLg),
                     onTap: () {
                       Navigator.pop(context);
@@ -342,7 +342,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.photo_library, color: AppColors.green400),
+                    leading: const Icon(Icons.photo_library, color: AppColors.primary),
                     title: Text('Choose from Gallery', style: AppTypography.bodyLg),
                     onTap: () {
                       Navigator.pop(context);
@@ -399,7 +399,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text('Profile picture updated successfully!'),
-                backgroundColor: AppColors.green400,
+                backgroundColor: AppColors.primary,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -446,7 +446,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Profile updated successfully'),
-            backgroundColor: AppColors.green400,
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.sm),

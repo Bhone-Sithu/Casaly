@@ -97,7 +97,7 @@ class GlassBottomNavigationBar extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppColors.green400.withOpacity(0.15)
+              ? AppColors.primary.withOpacity(0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -107,7 +107,7 @@ class GlassBottomNavigationBar extends StatelessWidget {
             Icon(
               isSelected ? selectedIcon : icon,
               color: isSelected 
-                  ? AppColors.green400 
+                  ? AppColors.primary 
                   : AppColors.cream600,
               size: 24,
             ),
@@ -116,7 +116,7 @@ class GlassBottomNavigationBar extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isSelected 
-                    ? AppColors.green400 
+                    ? AppColors.primary 
                     : AppColors.cream600,
                 fontSize: 10,
                 fontWeight: isSelected 

@@ -72,8 +72,10 @@ class FirebaseDormRepository implements IDormRepository {
       );
 
       final member = DormMemberModel(
+        id: user.uid, // Use user ID as document ID
         userId: user.uid,
         displayName: user.displayName ?? user.email ?? 'Unknown',
+        email: user.email ?? '',
         role: MemberRole.admin,
         joinedAt: now,
       );
@@ -140,8 +142,10 @@ class FirebaseDormRepository implements IDormRepository {
       }
 
       final member = DormMemberModel(
+        id: user.uid, // Use user ID as document ID
         userId: user.uid,
         displayName: user.displayName ?? user.email ?? 'Unknown',
+        email: user.email ?? '',
         role: MemberRole.member,
         joinedAt: DateTime.now(),
       );
@@ -414,4 +418,5 @@ class FirebaseDormRepository implements IDormRepository {
 
     return code;
   }
+
 }

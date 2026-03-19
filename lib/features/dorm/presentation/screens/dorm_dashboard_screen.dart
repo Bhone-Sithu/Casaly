@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -10,7 +11,9 @@ import '../../../../core/widgets/casaly_button.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
-import '../../../user_profile/presentation/widgets/settings_drawer.dart';
+import '../../../cleaning/presentation/screens/weekly_cleaning_schedule_screen.dart';
+import '../../../cleaning/domain/entities/cleaning_assignment.dart';
+import '../../domain/entities/dorm.dart';
 import '../providers/dorm_providers.dart';
 
 class DormDashboardScreen extends ConsumerWidget {
@@ -55,340 +58,7 @@ class DormDashboardScreen extends ConsumerWidget {
             }
 
             // User has a dorm, show dashboard
-            return Scaffold(
-              backgroundColor: Colors.white,
-              appBar: AppBar(
-                title: Text(
-                  dorm.name,
-                  style: AppTypography.h2.copyWith(color: AppColors.green400),
-                ),
-                backgroundColor: Colors.white,
-                elevation: 0,
-                actions: [
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(
-                        Icons.settings,
-                        color: AppColors.green400,
-                      ),
-                      onPressed: () => Scaffold.of(context).openEndDrawer(),
-                    ),
-                  ),
-                ],
-              ),
-              endDrawer: const SettingsDrawer(),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Dorm info card
-                    GlassCard(
-                      type: GlassType.primary,
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.home,
-                            size: 48,
-                            color: AppColors.green400,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'Welcome to ${dorm.name}!',
-                            style: AppTypography.h2.copyWith(
-                              color: AppColors.green400,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Invite Code: ',
-                                style: AppTypography.bodyLg.copyWith(
-                                  color: AppColors.green600,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.md,
-                                  vertical: AppSpacing.xs,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.cream100,
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.sm,
-                                  ),
-                                  border: Border.all(
-                                    color: AppColors.green200,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      dorm.inviteCode,
-                                      style: AppTypography.bodyLg.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.green600,
-                                        fontFamily: 'monospace',
-                                      ),
-                                    ),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    GestureDetector(
-                                      onTap: () => _copyInviteCode(
-                                        context,
-                                        dorm.inviteCode,
-                                      ),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        child: const Icon(
-                                          Icons.copy,
-                                          size: 16,
-                                          color: AppColors.green400,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            '${dorm.memberCount} member${dorm.memberCount == 1 ? '' : 's'}',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.green600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.xxxl),
-
-                    // Quick actions
-                    Text(
-                      'Quick Actions',
-                      style: AppTypography.h3.copyWith(
-                        color: AppColors.green400,
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.lg),
-
-                    GlassCard(
-                      type: GlassType.accent,
-                      onTap: () {
-                        // TODO: Navigate to cleaning schedule
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.yellow400.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.cleaning_services,
-                              color: AppColors.yellow600,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Cleaning Schedule',
-                                  style: AppTypography.bodyLg.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.yellow800,
-                                  ),
-                                ),
-                                Text(
-                                  'Who is responsible to clean?',
-                                  style: AppTypography.bodyMd.copyWith(
-                                    color: AppColors.yellow600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.yellow400,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.md),
-
-                    GlassCard(
-                      type: GlassType.secondary,
-                      onTap: () {
-                        // TODO: Navigate to laundry management
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.orange400.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.local_laundry_service,
-                              color: AppColors.orange600,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Laundry Management',
-                                  style: AppTypography.bodyLg.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.orange800,
-                                  ),
-                                ),
-                                Text(
-                                  'Check who is using the laundry',
-                                  style: AppTypography.bodyMd.copyWith(
-                                    color: AppColors.orange600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.orange400,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.md),
-
-                    GlassCard(
-                      type: GlassType.primary,
-                      onTap: () {
-                        // TODO: Navigate to member management
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.green400.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.people,
-                              color: AppColors.green600,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dorm Members',
-                                  style: AppTypography.bodyLg.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.green800,
-                                  ),
-                                ),
-                                Text(
-                                  'Manage members',
-                                  style: AppTypography.bodyMd.copyWith(
-                                    color: AppColors.green600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.green400,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: AppSpacing.md),
-
-                    GlassCard(
-                      type: GlassType.neutral,
-                      onTap: () {
-                        // TODO: Navigate to cleaning schedule
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.yellow400.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.cleaning_services,
-                              color: AppColors.yellow600,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Dorm Information',
-                                  style: AppTypography.bodyLg.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.yellow800,
-                                  ),
-                                ),
-                                Text(
-                                  'Manage Details about your Dorm',
-                                  style: AppTypography.bodyMd.copyWith(
-                                    color: AppColors.yellow600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppColors.yellow400,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Bottom padding for floating nav bar
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
-            );
+            return _DormDashboard(dorm: dorm);
           },
           loading: () => const Scaffold(
             backgroundColor: Colors.white,
@@ -531,7 +201,7 @@ class DormDashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            backgroundColor: AppColors.green400,
+            backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -554,5 +224,510 @@ class DormDashboardScreen extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+class _DormDashboard extends ConsumerStatefulWidget {
+  final Dorm dorm;
+
+  const _DormDashboard({required this.dorm});
+
+  @override
+  ConsumerState<_DormDashboard> createState() => _DormDashboardState();
+}
+
+class _DormDashboardState extends ConsumerState<_DormDashboard> {
+  DateTime _selectedDay = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          widget.dorm.name,
+          style: AppTypography.h2.copyWith(color: AppColors.primary),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.screenPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+
+            // Current week cleaning assignment
+            _buildCurrentWeekAssignment(),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            // Calendar
+            _buildCalendar(),
+
+            const SizedBox(height: AppSpacing.xxxl),
+
+                    // Quick actions
+                    Text(
+                      'Quick Actions',
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    GlassCard(
+                      type: GlassType.primary,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WeeklyCleaningScheduleScreen(),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.cleaning_services,
+                              color: AppColors.cyan600,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Cleaning Schedule',
+                                  style: AppTypography.bodyLg.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.cyan800,
+                                  ),
+                                ),
+                                Text(
+                                  'Who is responsible to clean?',
+                                  style: AppTypography.bodyMd.copyWith(
+                                    color: AppColors.cyan600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.md),
+
+                    GlassCard(
+                      type: GlassType.primary,
+                      onTap: () {
+                        // TODO: Navigate to laundry management
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.local_laundry_service,
+                              color: AppColors.cyan600,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Laundry Management',
+                                  style: AppTypography.bodyLg.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.cyan800,
+                                  ),
+                                ),
+                                Text(
+                                  'Check who is using the laundry',
+                                  style: AppTypography.bodyMd.copyWith(
+                                    color: AppColors.cyan600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.md),
+
+                    GlassCard(
+                      type: GlassType.primary,
+                      onTap: () {
+                        // TODO: Navigate to member management
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.people,
+                              color: AppColors.cyan600,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dorm Members',
+                                  style: AppTypography.bodyLg.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.cyan800,
+                                  ),
+                                ),
+                                Text(
+                                  'Manage members',
+                                  style: AppTypography.bodyMd.copyWith(
+                                    color: AppColors.cyan600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.md),
+
+                    GlassCard(
+                      type: GlassType.primary,
+                      onTap: () {
+                        // TODO: Navigate to cleaning schedule
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.cleaning_services,
+                              color: AppColors.cyan600,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Dorm Information',
+                                  style: AppTypography.bodyLg.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.cyan800,
+                                  ),
+                                ),
+                                Text(
+                                  'Manage Details about your Dorm',
+                                  style: AppTypography.bodyMd.copyWith(
+                                    color: AppColors.cyan600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+
+            // Bottom padding for floating nav bar
+            const SizedBox(height: 100),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentWeekAssignment() {
+    final currentWeek = CleaningAssignment.getWeekOfMonth(DateTime.now());
+    
+    return GlassCard(
+      type: GlassType.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.cleaning_services,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'This Week\'s Cleaning (Week $currentWeek)',
+                  style: AppTypography.bodyLg.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // TODO: Get actual assignment data from providers
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: AppColors.primary.withOpacity(0.2),
+                    child: Text(
+                      'GA',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Group A',
+                          style: AppTypography.bodyLg.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Kitchen & Living Room',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: AppColors.cyan600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'THIS WEEK',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalendar() {
+    return GlassCard(
+      type: GlassType.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Calendar',
+              style: AppTypography.bodyLg.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TableCalendar<CleaningAssignment>(
+              firstDay: DateTime.utc(2020, 1, 1),
+              lastDay: DateTime.utc(2030, 12, 31),
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+              calendarFormat: CalendarFormat.month,
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              headerStyle: HeaderStyle(
+                titleCentered: true,
+                formatButtonVisible: false,
+                titleTextStyle: AppTypography.h3.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: AppColors.primary,
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.primary,
+                ),
+              ),
+              calendarStyle: CalendarStyle(
+                todayDecoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.7),
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                markersMaxCount: 1,
+                markerDecoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                weekendTextStyle: TextStyle(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              eventLoader: (day) {
+                // TODO: Return cleaning assignments for the day
+                return _getAssignmentsForDay(day);
+              },
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+                _showDayAssignment(selectedDay);
+              },
+              onPageChanged: (focusedDay) {
+                setState(() {
+                  _focusedDay = focusedDay;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<CleaningAssignment> _getAssignmentsForDay(DateTime day) {
+    // TODO: Replace with actual provider data
+    final weekNumber = CleaningAssignment.getWeekOfMonth(day);
+    // Mock data - return assignment if it's week 1 (for demo)
+    if (weekNumber == 1) {
+      return [
+        CleaningAssignment(
+          id: '1',
+          dormId: widget.dorm.id,
+          weekNumber: weekNumber,
+          year: day.year,
+          month: day.month,
+          assignedGroupId: 'group1',
+          createdAt: DateTime.now(),
+        ),
+      ];
+    }
+    return [];
+  }
+
+  void _showDayAssignment(DateTime day) {
+    final assignments = _getAssignmentsForDay(day);
+    final weekNumber = CleaningAssignment.getWeekOfMonth(day);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${day.day}/${day.month}/${day.year}'),
+        content: assignments.isEmpty
+            ? Text('No cleaning assignment for Week $weekNumber')
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Week $weekNumber Assignment:'),
+                  const SizedBox(height: 8),
+                  Text('Group A'), // TODO: Get actual group/member name
+                ],
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          if (assignments.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+              child: const Text('View Schedule'),
+            ),
+        ],
+      ),
+    );
   }
 }

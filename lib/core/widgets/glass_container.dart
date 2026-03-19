@@ -4,14 +4,12 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 
 enum GlassType {
-  primary,
-  secondary,
-  accent,
-  neutral,
-  success,
-  warning,
-  error,
-  info,
+  primary,   // Cyan - main UI elements
+  neutral,   // Transparent - subtle elements  
+  success,   // Green - success states
+  warning,   // Yellow - warning states
+  error,     // Berry - error states
+  info,      // Orange - info states
 }
 
 class GlassContainer extends StatelessWidget {
@@ -96,11 +94,7 @@ class GlassContainer extends StatelessWidget {
   Color _getBaseColor() {
     switch (type) {
       case GlassType.primary:
-        return AppColors.green400;
-      case GlassType.secondary:
-        return AppColors.orange400;
-      case GlassType.accent:
-        return AppColors.yellow400;
+        return AppColors.primary;
       case GlassType.success:
         return AppColors.success;
       case GlassType.warning:

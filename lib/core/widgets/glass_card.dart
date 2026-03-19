@@ -54,21 +54,17 @@ class GlassCard extends StatelessWidget {
   Color _getBaseColor() {
     switch (type) {
       case GlassType.primary:
-        return const Color(0xFF4A9E60);
-      case GlassType.secondary:
-        return const Color(0xFFE8884A);
-      case GlassType.accent:
-        return const Color(0xFFD4A420);
+        return const Color(0xFF22D3EE); // cyan400
       case GlassType.success:
-        return const Color(0xFF4A9E60);
+        return const Color(0xFF4A9E60); // green400
       case GlassType.warning:
-        return const Color(0xFFD4A420);
+        return const Color(0xFFD4A420); // yellow400
       case GlassType.error:
-        return const Color(0xFFD04848);
+        return const Color(0xFFD04848); // berry400
       case GlassType.info:
-        return const Color(0xFFE8884A);
+        return const Color(0xFFE8884A); // orange400
       case GlassType.neutral:
-        return const Color(0xFFA09080);
+        return const Color(0xFFA09080); // cream400
     }
   }
 }

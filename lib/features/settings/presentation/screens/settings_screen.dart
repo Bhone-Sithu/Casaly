@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -13,7 +14,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateChangesProvider);
+    final userDormAsync = ref.watch(currentUserDormProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -39,6 +40,25 @@ class SettingsScreen extends ConsumerWidget {
             _buildSectionHeader('Dorm Settings'),
             const SizedBox(height: AppSpacing.md),
             
+            // Invite Code Card
+            userDormAsync.when(
+              data: (dorm) {
+                if (dorm == null) return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    GlassCard(
+                      type: GlassType.primary,
+                      onTap: () => _copyInviteCode(context, dorm.inviteCode),
+                      child: _buildInviteCodeTile(dorm.inviteCode),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -55,7 +75,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             
             GlassCard(
-              type: GlassType.secondary,
+              type: GlassType.primary,
               onTap: () {
                 // TODO: Navigate to member management
                 _showComingSoon(context, 'Member Management');
@@ -89,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             
             GlassCard(
-              type: GlassType.accent,
+              type: GlassType.primary,
               onTap: () {
                 _showComingSoon(context, 'Notifications');
               },
@@ -103,7 +123,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             
             GlassCard(
-              type: GlassType.neutral,
+              type: GlassType.primary,
               onTap: () {
                 _showComingSoon(context, 'Privacy & Security');
               },
@@ -117,7 +137,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             
             GlassCard(
-              type: GlassType.info,
+              type: GlassType.primary,
               onTap: () {
                 _showComingSoon(context, 'Help & Support');
               },
@@ -131,7 +151,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             
             GlassCard(
-              type: GlassType.neutral,
+              type: GlassType.primary,
               onTap: () {
                 _showAboutDialog(context);
               },
@@ -166,6 +186,53 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInviteCodeTile(String inviteCode) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.green400.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.qr_code,
+            color: AppColors.green400,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Invite Code',
+                style: AppTypography.bodyLg.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.cream800,
+                ),
+              ),
+              Text(
+                inviteCode,
+                style: AppTypography.h3.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.green400,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Icon(
+          Icons.copy,
+          size: 20,
+          color: AppColors.cream400,
+        ),
+      ],
     );
   }
 
@@ -234,6 +301,41 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  void _copyInviteCode(BuildContext context, String inviteCode) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: inviteCode));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.green400,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Invite code copied to clipboard!',
+                  style: AppTypography.bodyMd.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.error,
+            content: Text(
+              'Failed to copy invite code',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _showComingSoon(BuildContext context, String feature) {

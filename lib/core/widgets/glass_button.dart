@@ -5,7 +5,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'glass_container.dart';
 
-enum GlassButtonVariant { primary, secondary, accent, neutral }
+enum GlassButtonVariant { primary, info, warning, neutral }
 
 class GlassButton extends StatelessWidget {
   final String text;
@@ -93,10 +93,10 @@ class GlassButton extends StatelessWidget {
     switch (variant) {
       case GlassButtonVariant.primary:
         return GlassType.primary;
-      case GlassButtonVariant.secondary:
-        return GlassType.secondary;
-      case GlassButtonVariant.accent:
-        return GlassType.accent;
+      case GlassButtonVariant.info:
+        return GlassType.info;
+      case GlassButtonVariant.warning:
+        return GlassType.warning;
       case GlassButtonVariant.neutral:
         return GlassType.neutral;
     }
@@ -105,11 +105,11 @@ class GlassButton extends StatelessWidget {
   Color _getGlassColor() {
     switch (variant) {
       case GlassButtonVariant.primary:
-        return AppColors.green400;
-      case GlassButtonVariant.secondary:
-        return AppColors.orange400;
-      case GlassButtonVariant.accent:
-        return AppColors.yellow400;
+        return AppColors.primary;
+      case GlassButtonVariant.info:
+        return AppColors.info;
+      case GlassButtonVariant.warning:
+        return AppColors.warning;
       case GlassButtonVariant.neutral:
         return AppColors.cream600;
     }
@@ -122,10 +122,10 @@ class GlassButton extends StatelessWidget {
 
     switch (variant) {
       case GlassButtonVariant.primary:
-        return AppColors.green800;
-      case GlassButtonVariant.secondary:
+        return AppColors.cyan800;
+      case GlassButtonVariant.info:
         return AppColors.orange800;
-      case GlassButtonVariant.accent:
+      case GlassButtonVariant.warning:
         return AppColors.yellow800;
       case GlassButtonVariant.neutral:
         return AppColors.cream800;

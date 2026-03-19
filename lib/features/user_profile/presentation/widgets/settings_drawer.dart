@@ -29,12 +29,12 @@ class SettingsDrawer extends ConsumerWidget {
                 children: [
                   Text(
                     'Settings',
-                    style: AppTypography.h2.copyWith(color: AppColors.green400),
+                    style: AppTypography.h2.copyWith(color: AppColors.primary),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: AppColors.green400),
+                    icon: const Icon(Icons.close, color: AppColors.primary),
                   ),
                 ],
               ),
@@ -59,7 +59,7 @@ class SettingsDrawer extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Dorm settings not implemented yet'),
-                          backgroundColor: AppColors.green400,
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     },
@@ -76,7 +76,7 @@ class SettingsDrawer extends ConsumerWidget {
                           content: Text(
                             'Member management not implemented yet',
                           ),
-                          backgroundColor: AppColors.green400,
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     },
@@ -115,7 +115,7 @@ class SettingsDrawer extends ConsumerWidget {
                           content: Text(
                             'Notification settings not implemented yet',
                           ),
-                          backgroundColor: AppColors.green400,
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     },
@@ -130,7 +130,7 @@ class SettingsDrawer extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Privacy settings not implemented yet'),
-                          backgroundColor: AppColors.green400,
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     },
@@ -145,7 +145,7 @@ class SettingsDrawer extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Help & support not implemented yet'),
-                          backgroundColor: AppColors.green400,
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     },
@@ -197,7 +197,7 @@ class SettingsDrawer extends ConsumerWidget {
       child: Text(
         title,
         style: AppTypography.labelMd.copyWith(
-          color: AppColors.green400,
+          color: AppColors.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -217,8 +217,8 @@ class SettingsDrawer extends ConsumerWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          splashColor: AppColors.green400.withOpacity(0.1),
-          highlightColor: AppColors.green400.withOpacity(0.05),
+          splashColor: AppColors.primary.withOpacity(0.1),
+          highlightColor: AppColors.primary.withOpacity(0.05),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -229,10 +229,10 @@ class SettingsDrawer extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.green400.withOpacity(0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: AppColors.green400, size: 20),
+                  child: Icon(icon, color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -312,7 +312,7 @@ class SettingsDrawer extends ConsumerWidget {
       applicationIcon: const Icon(
         Icons.home,
         size: 48,
-        color: AppColors.green400,
+        color: AppColors.primary,
       ),
       children: [
         Text('Shared living made simple', style: AppTypography.bodyMd),

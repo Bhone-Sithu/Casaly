@@ -1,3 +1,4 @@
+import 'package:casaly/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/glass_bottom_navigation.dart';
 import '../../../dorm/presentation/screens/dorm_dashboard_screen.dart';
@@ -16,19 +17,16 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   final List<Widget> _screens = [
     const DormDashboardScreen(), // Home
-    const _ChatScreen(),         // Chat
-    const _SocialScreen(),       // Social
-    const SettingsScreen(),      // Settings
-    const UserProfileScreen(),   // Profile
+    const _ChatScreen(), // Chat
+    const _SocialScreen(), // Social
+    const SettingsScreen(), // Settings
+    const UserProfileScreen(), // Profile
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       extendBody: true,
       bottomNavigationBar: GlassBottomNavigationBar(
         currentIndex: _currentIndex,
@@ -51,10 +49,7 @@ class _ChatScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Chat',
-          style: TextStyle(color: Color(0xFF4A9E60)),
-        ),
+        title: const Text('Chat', style: TextStyle(color: Color(0xFF4A9E60))),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -62,11 +57,7 @@ class _ChatScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 64,
-              color: Color(0xFF4A9E60),
-            ),
+            Icon(Icons.chat_bubble_outline, size: 64, color: Color(0xFF4A9E60)),
             SizedBox(height: 16),
             Text(
               'Chat Feature',
@@ -79,10 +70,7 @@ class _ChatScreen extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               'Coming Soon',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF5A4E42),
-              ),
+              style: TextStyle(fontSize: 16, color: Color(0xFF5A4E42)),
             ),
           ],
         ),
@@ -99,10 +87,7 @@ class _SocialScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Social',
-          style: TextStyle(color: Color(0xFF4A9E60)),
-        ),
+        title: const Text('Social', style: TextStyle(color: Color(0xFF4A9E60))),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -110,11 +95,7 @@ class _SocialScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.explore_outlined,
-              size: 64,
-              color: Color(0xFF4A9E60),
-            ),
+            Icon(Icons.explore_outlined, size: 64, color: Color(0xFF4A9E60)),
             SizedBox(height: 16),
             Text(
               'Social Features',
@@ -127,10 +108,7 @@ class _SocialScreen extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               'Coming Soon',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF5A4E42),
-              ),
+              style: TextStyle(fontSize: 16, color: Color(0xFF5A4E42)),
             ),
           ],
         ),

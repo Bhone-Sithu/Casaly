@@ -2,29 +2,39 @@
 import 'package:flutter/material.dart';
 
 abstract class AppColors {
-  // === PRIMARY — Garden Green ===
+  // === PRIMARY — Cyan ===
+  // Fresh, modern, calming blue-green
+  // Use for: brand, primary actions, hero cards, nav active, main UI elements
+  static const cyan50  = Color(0xFFEAFEFF);
+  static const cyan100 = Color(0xFFB2F5FF);
+  static const cyan200 = Color(0xFF7DEDFF);
+  static const cyan400 = Color(0xFF22D3EE);  // ← Primary brand color
+  static const cyan600 = Color(0xFF0891B2);
+  static const cyan800 = Color(0xFF155E75);
+
+  // === SEMANTIC — Garden Green ===
   // Fresh leaves, summer grass, life growing
-  // Use for: brand, primary actions, hero cards, nav active, "clean/done"
+  // Use for: success states, completed tasks, positive feedback
   static const green50  = Color(0xFFEAF5E4);
   static const green100 = Color(0xFFB8DCA4);
   static const green200 = Color(0xFF8BBC78);
-  static const green400 = Color(0xFF4A9E60);  // ← Primary brand color
+  static const green400 = Color(0xFF4A9E60);
   static const green600 = Color(0xFF3A7A44);
   static const green800 = Color(0xFF245030);
 
-  // === SECONDARY — Sunset Orange ===
+  // === SEMANTIC — Sunset Orange ===
   // Golden hour warmth, urgency without stress
-  // Use for: timers, alerts, washer status, warm accents
+  // Use for: timers, alerts, washer status, warm accents, info states
   static const orange50  = Color(0xFFFFF0E0);
   static const orange100 = Color(0xFFFCCFA0);
   static const orange200 = Color(0xFFF0A060);
-  static const orange400 = Color(0xFFE8884A);  // ← Secondary brand color
+  static const orange400 = Color(0xFFE8884A);
   static const orange600 = Color(0xFFC06830);
   static const orange800 = Color(0xFF8A4820);
 
-  // === ACCENT — Sunflower ===
+  // === SEMANTIC — Sunflower ===
   // Cheerful, optimistic, summer fields
-  // Use for: shopping lists, info badges, counts, gentle reminders
+  // Use for: warning states, caution alerts, pending tasks
   static const yellow50  = Color(0xFFFEF8E0);
   static const yellow100 = Color(0xFFF5E08A);
   static const yellow200 = Color(0xFFF2C24E);
@@ -32,9 +42,9 @@ abstract class AppColors {
   static const yellow600 = Color(0xFFA08420);
   static const yellow800 = Color(0xFF6A5810);
 
-  // === ACCENT — Warm Berry ===
+  // === SEMANTIC — Warm Berry ===
   // Strawberry warmth, excitement without aggression
-  // Use for: events, social features, missed tasks, errors
+  // Use for: error states, destructive actions, critical alerts
   static const berry50  = Color(0xFFFDEAEA);
   static const berry100 = Color(0xFFF0AAAA);
   static const berry200 = Color(0xFFE87070);
@@ -53,8 +63,9 @@ abstract class AppColors {
   static const cream800 = Color(0xFF302820);  // ← Primary text
 
   // === SEMANTIC (mapped from above) ===
-  static const success = green400;
-  static const warning = yellow400;
-  static const error   = berry400;
-  static const info    = orange400;
+  static const primary = cyan400;    // ← Main brand color
+  static const success = green400;   // ← Success states
+  static const warning = yellow400;  // ← Warning states
+  static const error   = berry400;   // ← Error states
+  static const info    = orange400;  // ← Info states
 }
