@@ -14,6 +14,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../cleaning/presentation/screens/weekly_cleaning_schedule_screen.dart';
 import '../../../cleaning/domain/entities/cleaning_assignment.dart';
 import '../../../cleaning/presentation/providers/cleaning_providers.dart';
+import '../../../laundry/presentation/screens/laundry_dashboard_screen.dart';
 import '../../domain/entities/dorm.dart';
 import '../providers/dorm_providers.dart';
 
@@ -331,7 +332,12 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             GlassCard(
               type: GlassType.primary,
               onTap: () {
-                // TODO: Navigate to laundry management
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LaundryDashboardScreen(dorm: widget.dorm),
+                  ),
+                );
               },
               child: Row(
                 children: [

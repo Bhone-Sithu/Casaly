@@ -55,27 +55,10 @@ class FirebaseAuthRepository implements IAuthRepository {
   @override
   Future<User?> createUserWithEmailAndPassword(String email, String password) async {
     try {
-      print('FIREBASE_DEBUG: Starting email signup for: $email');
-      
-      try {
-        // Check Firebase initialization
-        final app = firebase_auth.FirebaseAuth.instance.app;
-        print('FIREBASE_DEBUG: Firebase app: ${app.name}');
-        print('FIREBASE_DEBUG: Firebase project ID: ${app.options.projectId}');
-        print('FIREBASE_DEBUG: Firebase auth instance exists: ${firebase_auth.FirebaseAuth.instance != null}');
-        
-        // Test if we can access Firebase Auth
-        print('FIREBASE_DEBUG: Current user before signup: ${_firebaseAuth.currentUser?.uid ?? "null"}');
-      } catch (e) {
-        print('FIREBASE_DEBUG: Error accessing Firebase app info: $e');
-      }
-      
-      print('FIREBASE_DEBUG: About to call createUserWithEmailAndPassword...');
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      print('FIREBASE_DEBUG: createUserWithEmailAndPassword completed successfully');
       developer.log('Firebase user credential created');
       
       final firebaseUser = userCredential.user;
@@ -87,11 +70,6 @@ class FirebaseAuthRepository implements IAuthRepository {
       developer.log('Creating user document in Firestore for: ${firebaseUser.uid}');
       return await _createUserFromFirebaseUser(firebaseUser);
     } on firebase_auth.FirebaseAuthException catch (e) {
-      print('FIREBASE_DEBUG: FirebaseAuthException caught!');
-      print('FIREBASE_DEBUG: Error Code: ${e.code}');
-      print('FIREBASE_DEBUG: Error Message: ${e.message}');
-      print('FIREBASE_DEBUG: Plugin: ${e.plugin}');
-      print('FIREBASE_DEBUG: Full error: ${e.toString()}');
       
       developer.log('Firebase Auth Exception during signup:');
       developer.log('  Code: ${e.code}');

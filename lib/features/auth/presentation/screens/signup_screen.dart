@@ -40,21 +40,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     setState(() => _isLoadingEmail = true);
 
     try {
-      print('DEBUG: Starting email signup...');
-      print('DEBUG: Email: ${_emailController.text.trim()}');
-      print('DEBUG: Password length: ${_passwordController.text.length}');
       
       final user = await ref.read(authRepositoryProvider).createUserWithEmailAndPassword(
             _emailController.text.trim(),
             _passwordController.text,
           );
-      print('DEBUG: Email signup result: ${user?.email}');
       
       if (mounted && user != null) {
-        print('DEBUG: Navigating to dorm selection...');
         context.go('/dorm-selection');
       } else if (mounted && user == null) {
-        print('DEBUG: User is null after signup');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sign up failed: No user returned'),
@@ -62,10 +56,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         );
       }
-    } catch (e, stackTrace) {
-      print('DEBUG: Email signup error: $e');
-      print('DEBUG: Error type: ${e.runtimeType}');
-      print('DEBUG: Stack trace: $stackTrace');
+    } catch (e) {
       
       if (mounted) {
         // Extract user-friendly message from exception
@@ -100,22 +91,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     setState(() => _isLoadingGoogle = true);
 
     try {
-      print('DEBUG: Starting Google Sign-In...');
       
       // Add additional safety check
       if (!mounted) {
-        print('DEBUG: Widget not mounted, aborting Google Sign-In');
         return;
       }
       
       final user = await ref.read(authRepositoryProvider).signInWithGoogle();
-      print('DEBUG: Google Sign-In result: ${user?.email}');
       
       if (mounted && user != null) {
-        print('DEBUG: Navigating to dorm selection...');
         context.go('/dorm-selection');
       } else {
-        print('DEBUG: Google Sign-In cancelled or failed');
         if (mounted && user == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -125,9 +111,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           );
         }
       }
-    } catch (e, stackTrace) {
-      print('DEBUG: Google Sign-In error: $e');
-      print('DEBUG: Stack trace: $stackTrace');
+    } catch (e) {
       
       if (mounted) {
         // Extract user-friendly message from exception
