@@ -15,6 +15,8 @@ import '../../../cleaning/presentation/screens/weekly_cleaning_schedule_screen.d
 import '../../../cleaning/domain/entities/cleaning_assignment.dart';
 import '../../../cleaning/presentation/providers/cleaning_providers.dart';
 import '../../../laundry/presentation/screens/laundry_dashboard_screen.dart';
+import '../../../laundry/presentation/providers/laundry_providers.dart';
+import '../../../laundry/presentation/widgets/compact_machine_card.dart';
 import '../../domain/entities/dorm.dart';
 import '../providers/dorm_providers.dart';
 
@@ -260,6 +262,11 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
 
             const SizedBox(height: AppSpacing.xl),
 
+            // Laundry machines in use
+            _buildLaundryInUse(widget.dorm.id),
+
+            const SizedBox(height: AppSpacing.lg),
+
             // Calendar
             _buildCalendar(),
 
@@ -335,7 +342,8 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => LaundryDashboardScreen(dorm: widget.dorm),
+                    builder: (context) =>
+                        LaundryDashboardScreen(dorm: widget.dorm),
                   ),
                 );
               },
@@ -898,6 +906,76 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLaundryInUse(String dormId) {
+    final machinesAsync = ref.watch(dormLaundryMachinesProvider(dormId));
+
+    return machinesAsync.when(
+      data: (machines) {
+        // Filter for machines that are currently in use
+        final machinesInUse = machines
+            .where((machine) => machine.isInUse)
+            .toList();
+
+        if (machinesInUse.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Laundry in Use',
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.cream800,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          LaundryDashboardScreen(dorm: widget.dorm),
+                    ),
+                  ),
+                  child: Text(
+                    'View All',
+                    style: AppTypography.labelMd.copyWith(
+                      color: AppColors.orange400,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            SizedBox(
+              height: 80,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.zero,
+                itemCount: machinesInUse.length,
+                itemBuilder: (context, index) {
+                  return CompactMachineCard(
+                    machine: machinesInUse[index],
+                    dormId: dormId,
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
     );
   }
 }

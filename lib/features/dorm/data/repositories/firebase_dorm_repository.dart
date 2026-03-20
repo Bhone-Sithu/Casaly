@@ -63,10 +63,19 @@ class FirebaseDormRepository implements IDormRepository {
         description: description,
       );
 
+      // Get display name from user document 
+      final userDocument = await _firestore.collection(FirestorePaths.users).doc(user.uid).get();
+      String displayName = user.displayName ?? 'Unknown User';
+      
+      if (userDocument.exists) {
+        final userData = userDocument.data() as Map<String, dynamic>;
+        displayName = userData['displayName'] as String? ?? displayName;
+      }
+
       final member = DormMemberModel(
         id: user.uid, // Use user ID as document ID
         userId: user.uid,
-        displayName: user.displayName ?? user.email ?? 'Unknown',
+        displayName: displayName,
         email: user.email ?? '',
         role: MemberRole.admin,
         joinedAt: now,
@@ -128,10 +137,29 @@ class FirebaseDormRepository implements IDormRepository {
         return Right(dorm.toEntity());
       }
 
+      // Get user's display name from their user document
+      final userDoc = await _firestore.collection(FirestorePaths.users).doc(user.uid).get();
+      String displayName = user.displayName ?? 'Unknown User';
+      
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        displayName = userData['displayName'] as String? ?? displayName;
+      } else {
+        // Create user document if it doesn't exist
+        displayName = user.displayName ?? user.email?.split('@').first ?? 'Unknown User';
+        await _firestore.collection(FirestorePaths.users).doc(user.uid).set({
+          'displayName': displayName,
+          'email': user.email!,
+          'createdAt': FieldValue.serverTimestamp(),
+          'dormId': null,
+          'fcmToken': null,
+        }, SetOptions(merge: true));
+      }
+
       final member = DormMemberModel(
         id: user.uid, // Use user ID as document ID
         userId: user.uid,
-        displayName: user.displayName ?? user.email ?? 'Unknown',
+        displayName: displayName,
         email: user.email ?? '',
         role: MemberRole.member,
         joinedAt: DateTime.now(),
@@ -368,24 +396,50 @@ class FirebaseDormRepository implements IDormRepository {
 
   @override
   Stream<List<DormMember>> watchDormMembers(String dormId) {
-    
     return _firestore
         .collection(FirestorePaths.dormMembers(dormId))
         .orderBy('joinedAt')
         .snapshots()
-        .map((snapshot) {
+        .asyncMap((snapshot) async {
+      try {
+        final members = <DormMember>[];
+        
+        for (final doc in snapshot.docs) {
+          var member = DormMemberModel.fromFirestore(doc);
           
-          try {
-            final members = snapshot.docs
-                .map((doc) => DormMemberModel.fromFirestore(doc).toEntity())
-                .toList();
-            return members;
-          } catch (e) {
-            rethrow;
+          // Check if display name looks like an email (contains @ and .)
+          if (member.displayName.contains('@') && member.displayName.contains('.')) {
+            try {
+              // Try to get the real display name from the user document
+              final userDoc = await _firestore.collection(FirestorePaths.users).doc(member.userId).get();
+              if (userDoc.exists) {
+                final userData = userDoc.data() as Map<String, dynamic>;
+                final realDisplayName = userData['displayName'] as String?;
+                
+                if (realDisplayName != null && realDisplayName != member.displayName && !realDisplayName.contains('@')) {
+                  // Update the member document with the correct display name
+                  await _firestore
+                      .collection(FirestorePaths.dormMembers(dormId))
+                      .doc(doc.id)
+                      .update({'displayName': realDisplayName});
+                  
+                  // Create updated member object with new display name
+                  member = DormMemberModel.fromEntity(member.toEntity().copyWith(displayName: realDisplayName));
+                }
+              }
+            } catch (e) {
+              // If there's an error updating, just continue with the original member
+            }
           }
-        })
-        .handleError((error) {
-        });
+          
+          members.add(member.toEntity());
+        }
+        
+        return members;
+      } catch (e) {
+        rethrow;
+      }
+    });
   }
 
   Future<String> _generateUniqueInviteCode() async {

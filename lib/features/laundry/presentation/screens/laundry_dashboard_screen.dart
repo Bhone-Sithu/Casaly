@@ -6,7 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../dorm/domain/entities/dorm.dart';
 import '../providers/laundry_providers.dart';
-import '../widgets/fixed_machine_card.dart';
+import '../widgets/glass_machine_card.dart';
 import '../widgets/add_machine_dialog.dart';
 import '../../domain/entities/laundry_machine.dart';
 
@@ -29,7 +29,7 @@ class _LaundryDashboardScreenState
     );
 
     return Scaffold(
-      backgroundColor: AppColors.cream50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Laundry Machines',
@@ -123,65 +123,77 @@ class _LaundryDashboardScreenState
     final dryers = machines.where((m) => m.type == MachineType.dryer).toList();
 
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Washers section
-          if (washers.isNotEmpty) ...[
-            Row(
-              children: [
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Washers (${washers.length})',
-                  style: AppTypography.h3.copyWith(color: AppColors.cream800),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...washers.map(
-              (machine) => Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: FixedMachineCard(
-                  machine: machine,
-                  dormId: widget.dorm.id,
-                  onMachineUpdated: () => ref.invalidate(
-                    dormLaundryMachinesProvider(widget.dorm.id),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Washers section
+            if (washers.isNotEmpty) ...[
+              Row(
+                children: [
+                  Text(
+                    'Washers (${washers.length})',
+                    style: AppTypography.h3.copyWith(color: AppColors.cream800),
                   ),
-                ),
+                ],
               ),
-            ),
-            if (dryers.isNotEmpty) const SizedBox(height: AppSpacing.lg),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                childAspectRatio: 0.85,
+                children: washers
+                    .map(
+                      (machine) => GlassMachineCard(
+                        machine: machine,
+                        dormId: widget.dorm.id,
+                        onMachineUpdated: () => ref.invalidate(
+                          dormLaundryMachinesProvider(widget.dorm.id),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+              if (dryers.isNotEmpty) const SizedBox(height: AppSpacing.lg),
+            ],
 
-          // Dryers section
-          if (dryers.isNotEmpty) ...[
-            Row(
-              children: [
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Dryers (${dryers.length})',
-                  style: AppTypography.h3.copyWith(color: AppColors.cream800),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...dryers.map(
-              (machine) => Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: FixedMachineCard(
-                  machine: machine,
-                  dormId: widget.dorm.id,
-                  onMachineUpdated: () => ref.invalidate(
-                    dormLaundryMachinesProvider(widget.dorm.id),
+            // Dryers section
+            if (dryers.isNotEmpty) ...[
+              Row(
+                children: [
+                  Text(
+                    'Dryers (${dryers.length})',
+                    style: AppTypography.h3.copyWith(color: AppColors.cream800),
                   ),
-                ),
+                ],
               ),
-            ),
+              const SizedBox(height: AppSpacing.md),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                childAspectRatio: 0.85,
+                children: dryers
+                    .map(
+                      (machine) => GlassMachineCard(
+                        machine: machine,
+                        dormId: widget.dorm.id,
+                        onMachineUpdated: () => ref.invalidate(
+                          dormLaundryMachinesProvider(widget.dorm.id),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ],
-        ],
-      ),
-    );
+        ),
+      );
   }
 
   void _showAddMachineDialog(BuildContext context) {
