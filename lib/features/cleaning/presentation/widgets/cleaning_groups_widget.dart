@@ -218,7 +218,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
           const SizedBox(height: 12),
           if (groups.isEmpty)
             _buildEmptyGroups(members, dormId)
-          else
+          else ...[
             Expanded(
               child: ListView.separated(
                 itemCount: groups.length,
@@ -228,6 +228,21 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
                     _buildGroupCard(groups[index], groups, members),
               ),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _showCreateGroupDialog(members, dormId),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add Group'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                minimumSize: const Size.fromHeight(44),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -385,6 +400,8 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Group created successfully!')),
             );
+            // Invalidate groups provider to refresh UI immediately
+            ref.invalidate(dormCleaningGroupsProvider(dormId));
           } catch (e) {
             print('WIDGET_DEBUG: Error in group creation: $e');
             ScaffoldMessenger.of(context).showSnackBar(
@@ -408,9 +425,37 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
   }
 
   void _showEditGroupDialog(CleaningGroup group) {
-    // TODO: Implement edit group dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit group feature coming soon')),
+    final currentUserDorm = ref.read(currentUserDormProvider);
+    final dorm = currentUserDorm.value;
+    if (dorm == null) return;
+
+    final membersAsync = ref.read(dormMembersProvider(dorm.id));
+    membersAsync.when(
+      data: (members) {
+        showDialog(
+          context: context,
+          builder: (context) => _GroupEditDialog(
+            group: group,
+            availableMembers: members,
+            onGroupUpdated: (updatedGroup) async {
+              try {
+                await ref.read(updateCleaningGroupProvider(updatedGroup).future);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Group updated successfully!')),
+                );
+                // Invalidate the groups provider to refresh the UI
+                ref.invalidate(dormCleaningGroupsProvider(dorm.id));
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error updating group: $e')),
+                );
+              }
+            },
+          ),
+        );
+      },
+      loading: () {},
+      error: (_, __) {},
     );
   }
 
@@ -588,6 +633,167 @@ class _GroupCreationDialogState extends State<_GroupCreationDialog> {
                 }
               : null,
           child: const Text('Create'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+}
+
+class _GroupEditDialog extends StatefulWidget {
+  final CleaningGroup group;
+  final List<DormMember> availableMembers;
+  final Function(CleaningGroup) onGroupUpdated;
+
+  const _GroupEditDialog({
+    required this.group,
+    required this.availableMembers,
+    required this.onGroupUpdated,
+  });
+
+  @override
+  State<_GroupEditDialog> createState() => _GroupEditDialogState();
+}
+
+class _GroupEditDialogState extends State<_GroupEditDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late final Set<String> _selectedMemberIds;
+  late Color _selectedColor;
+
+  final List<Color> _availableColors = [
+    Colors.blue,
+    Colors.green,
+    Colors.red,
+    Colors.orange,
+    Colors.purple,
+    Colors.teal,
+    Colors.pink,
+    Colors.amber,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.group.name);
+    _descriptionController = TextEditingController(text: widget.group.description ?? '');
+    _selectedMemberIds = Set.from(widget.group.memberIds);
+    
+    // Parse the color from hex string
+    _selectedColor = Colors.blue; // Default
+    if (widget.group.color != null) {
+      try {
+        _selectedColor = Color(int.parse('0xFF${widget.group.color!.replaceAll('#', '')}'));
+      } catch (e) {
+        _selectedColor = Colors.blue;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Group'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description (Optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            Text('Color', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _availableColors.map((color) {
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedColor = color),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: _selectedColor == color
+                          ? Border.all(color: Colors.black, width: 2)
+                          : null,
+                    ),
+                    child: _selectedColor == color
+                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            Text('Members', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            ...widget.availableMembers.map((member) {
+              return CheckboxListTile(
+                title: Text(member.displayName),
+                value: _selectedMemberIds.contains(member.id),
+                onChanged: (selected) {
+                  setState(() {
+                    if (selected ?? false) {
+                      _selectedMemberIds.add(member.id);
+                    } else {
+                      _selectedMemberIds.remove(member.id);
+                    }
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+              );
+            }),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed:
+              _selectedMemberIds.isNotEmpty &&
+                  _nameController.text.trim().isNotEmpty
+              ? () {
+                  final updatedGroup = widget.group.copyWith(
+                    name: _nameController.text.trim(),
+                    description: _descriptionController.text.trim().isNotEmpty
+                        ? _descriptionController.text.trim()
+                        : null,
+                    memberIds: _selectedMemberIds.toList(),
+                    color: _selectedColor.value
+                        .toRadixString(16)
+                        .substring(2)
+                        .toUpperCase(),
+                  );
+                  widget.onGroupUpdated(updatedGroup);
+                  Navigator.pop(context);
+                }
+              : null,
+          child: const Text('Update'),
         ),
       ],
     );

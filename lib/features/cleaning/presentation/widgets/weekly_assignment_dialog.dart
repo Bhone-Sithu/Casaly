@@ -565,3 +565,219 @@ class _WeeklyAssignmentDialogState
 }
 
 enum AssignmentType { individual, group }
+
+class EditAssignmentDialog extends ConsumerStatefulWidget {
+  final CleaningAssignment assignment;
+  final Function(CleaningAssignment) onAssignmentUpdated;
+
+  const EditAssignmentDialog({
+    super.key,
+    required this.assignment,
+    required this.onAssignmentUpdated,
+  });
+
+  @override
+  ConsumerState<EditAssignmentDialog> createState() =>
+      _EditAssignmentDialogState();
+}
+
+class _EditAssignmentDialogState extends ConsumerState<EditAssignmentDialog> {
+  late AssignmentType _assignmentType;
+  late String? _selectedGroupId;
+  late Set<String> _selectedMemberIds;
+  late final TextEditingController _notesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _notesController = TextEditingController(text: widget.assignment.notes ?? '');
+    
+    // Determine assignment type and initialize values based on existing assignment
+    if (widget.assignment.assignedGroupId != null) {
+      _assignmentType = AssignmentType.group;
+      _selectedGroupId = widget.assignment.assignedGroupId;
+      _selectedMemberIds = {};
+    } else {
+      _assignmentType = AssignmentType.individual;
+      _selectedGroupId = null;
+      _selectedMemberIds = Set.from(widget.assignment.assignedMemberIds ?? []);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserDorm = ref.watch(currentUserDormProvider);
+    
+    return currentUserDorm.when(
+      data: (dorm) {
+        if (dorm == null) return const SizedBox();
+
+        final groupsAsync = ref.watch(dormCleaningGroupsProvider(dorm.id));
+        final membersAsync = ref.watch(dormMembersProvider(dorm.id));
+
+        return AlertDialog(
+          title: Text('Edit Week ${widget.assignment.weekNumber} Assignment'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Assignment Type', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 8),
+                Column(
+                  children: [
+                    RadioListTile<AssignmentType>(
+                      title: const Text('Individual'),
+                      value: AssignmentType.individual,
+                      groupValue: _assignmentType,
+                      onChanged: (value) {
+                        setState(() {
+                          _assignmentType = value!;
+                          _selectedGroupId = null;
+                        });
+                      },
+                    ),
+                    RadioListTile<AssignmentType>(
+                      title: const Text('Group'),
+                      value: AssignmentType.group,
+                      groupValue: _assignmentType,
+                      onChanged: (value) {
+                        setState(() {
+                          _assignmentType = value!;
+                          _selectedMemberIds.clear();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                if (_assignmentType == AssignmentType.group)
+                  groupsAsync.when(
+                    data: (groups) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Select Group', style: Theme.of(context).textTheme.titleSmall),
+                        const SizedBox(height: 8),
+                        ...groups.map((group) => RadioListTile<String>(
+                          title: Row(
+                            children: [
+                              if (group.color != null)
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse('0xFF${group.color!.replaceAll('#', '')}')),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              Text(group.name),
+                            ],
+                          ),
+                          subtitle: Text('${group.memberIds.length} members'),
+                          value: group.id,
+                          groupValue: _selectedGroupId,
+                          onChanged: (value) {
+                            setState(() => _selectedGroupId = value);
+                          },
+                        )),
+                      ],
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (_, __) => const Text('Error loading groups'),
+                  ),
+
+                if (_assignmentType == AssignmentType.individual)
+                  membersAsync.when(
+                    data: (members) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Select Members', style: Theme.of(context).textTheme.titleSmall),
+                        const SizedBox(height: 8),
+                        ...members.map((member) => CheckboxListTile(
+                          title: Text(member.displayName),
+                          value: _selectedMemberIds.contains(member.id),
+                          onChanged: (selected) {
+                            setState(() {
+                              if (selected ?? false) {
+                                _selectedMemberIds.add(member.id);
+                              } else {
+                                _selectedMemberIds.remove(member.id);
+                              }
+                            });
+                          },
+                        )),
+                      ],
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (_, __) => const Text('Error loading members'),
+                  ),
+
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes (Optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: _canUpdate() ? _updateAssignment : null,
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Center(child: Text('Error loading dorm')),
+    );
+  }
+
+  bool _canUpdate() {
+    if (_assignmentType == AssignmentType.group) {
+      return _selectedGroupId != null;
+    } else {
+      return _selectedMemberIds.isNotEmpty;
+    }
+  }
+
+  void _updateAssignment() async {
+    try {
+      // Create a new assignment instead of using copyWith to properly handle null values
+      final updatedAssignment = CleaningAssignment(
+        id: widget.assignment.id,
+        dormId: widget.assignment.dormId,
+        weekNumber: widget.assignment.weekNumber,
+        year: widget.assignment.year,
+        month: widget.assignment.month,
+        assignedGroupId: _assignmentType == AssignmentType.group ? _selectedGroupId : null,
+        assignedMemberIds: _assignmentType == AssignmentType.individual ? _selectedMemberIds.toList() : null,
+        notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+        createdAt: widget.assignment.createdAt,
+      );
+
+      widget.onAssignmentUpdated(updatedAssignment);
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating assignment: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+}

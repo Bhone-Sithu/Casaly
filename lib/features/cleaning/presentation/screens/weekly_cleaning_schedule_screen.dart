@@ -20,30 +20,39 @@ class WeeklyCleaningScheduleScreen extends ConsumerStatefulWidget {
 class _WeeklyCleaningScheduleScreenState
     extends ConsumerState<WeeklyCleaningScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
-  
+
   @override
   Widget build(BuildContext context) {
     // Watch providers at the top level for stability
     final currentUserDorm = ref.watch(currentUserDormProvider);
-    
+
     return currentUserDorm.when(
       data: (dorm) {
         if (dorm == null) {
           return Scaffold(
-            body: const Center(child: Text('No dorm found. Please join or create a dorm first.')),
+            body: const Center(
+              child: Text('No dorm found. Please join or create a dorm first.'),
+            ),
           );
         }
-        
-        final assignmentsAsync = ref.watch(dormCleaningAssignmentsProvider(dorm.id));
+
+        final assignmentsAsync = ref.watch(
+          dormCleaningAssignmentsProvider(dorm.id),
+        );
         final groupsAsync = ref.watch(dormCleaningGroupsProvider(dorm.id));
         final membersAsync = ref.watch(dormMembersOnceProvider(dorm.id));
-        
+
         return assignmentsAsync.when(
           data: (assignments) {
             return groupsAsync.when(
               data: (groups) {
                 return membersAsync.when(
-                  data: (members) => _buildScaffoldWithAllData(assignments, groups, members, dorm.id),
+                  data: (members) => _buildScaffoldWithAllData(
+                    assignments,
+                    groups,
+                    members,
+                    dorm.id,
+                  ),
                   loading: () => _buildScaffoldLoading(),
                   error: (_, __) => _buildScaffoldError(),
                 );
@@ -60,15 +69,17 @@ class _WeeklyCleaningScheduleScreenState
       error: (_, __) => _buildScaffoldError(),
     );
   }
-  
+
   Widget _buildScaffoldWithAllData(
-    List<CleaningAssignment> assignments, 
-    List<CleaningGroup> groups, 
+    List<CleaningAssignment> assignments,
+    List<CleaningGroup> groups,
     List<DormMember> members,
-    String dormId
+    String dormId,
   ) {
-    print('SCHEDULE_FINAL: Building with ${assignments.length} assignments, ${groups.length} groups, ${members.length} members');
-    
+    print(
+      'SCHEDULE_FINAL: Building with ${assignments.length} assignments, ${groups.length} groups, ${members.length} members',
+    );
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -92,7 +103,12 @@ class _WeeklyCleaningScheduleScreenState
                 const SizedBox(height: 20),
                 _buildMonthSelector(),
                 const SizedBox(height: 20),
-                _buildWeeklyScheduleWithAllData(assignments, groups, members, dormId),
+                _buildWeeklyScheduleWithAllData(
+                  assignments,
+                  groups,
+                  members,
+                  dormId,
+                ),
                 const SizedBox(height: 20),
                 _buildQuickActions(),
                 const SizedBox(height: 100),
@@ -103,7 +119,7 @@ class _WeeklyCleaningScheduleScreenState
       ),
     );
   }
-  
+
   Widget _buildScaffoldLoading() {
     return Scaffold(
       body: CustomScrollView(
@@ -121,7 +137,7 @@ class _WeeklyCleaningScheduleScreenState
       ),
     );
   }
-  
+
   Widget _buildScaffoldError() {
     return Scaffold(
       body: CustomScrollView(
@@ -141,10 +157,10 @@ class _WeeklyCleaningScheduleScreenState
   }
 
   Widget _buildWeeklyScheduleWithAllData(
-    List<CleaningAssignment> assignments, 
-    List<CleaningGroup> groups, 
+    List<CleaningAssignment> assignments,
+    List<CleaningGroup> groups,
     List<DormMember> members,
-    String dormId
+    String dormId,
   ) {
     final weeksInMonth = _getWeeksInMonth(_selectedDate);
 
@@ -153,14 +169,22 @@ class _WeeklyCleaningScheduleScreenState
       children: [
         Text(
           'Weekly Assignments',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ...List.generate(weeksInMonth, (index) {
           final weekNumber = index + 1;
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _buildWeekCardWithAllData(weekNumber, assignments, groups, members, dormId),
+            child: _buildWeekCardWithAllData(
+              weekNumber,
+              assignments,
+              groups,
+              members,
+              dormId,
+            ),
           );
         }),
       ],
@@ -194,13 +218,12 @@ class _WeeklyCleaningScheduleScreenState
     );
   }
 
-
   Widget _buildWeekCardWithAllData(
-    int weekNumber, 
-    List<CleaningAssignment> assignments, 
-    List<CleaningGroup> groups, 
+    int weekNumber,
+    List<CleaningAssignment> assignments,
+    List<CleaningGroup> groups,
     List<DormMember> members,
-    String dormId
+    String dormId,
   ) {
     // Filter assignments for the current month and week
     final assignment = assignments
@@ -212,17 +235,25 @@ class _WeeklyCleaningScheduleScreenState
         )
         .firstOrNull;
 
-    print('WEEK_CARD_FINAL: Week $weekNumber - Found assignment: ${assignment?.id ?? 'null'}');
+    print(
+      'WEEK_CARD_FINAL: Week $weekNumber - Found assignment: ${assignment?.id ?? 'null'}',
+    );
 
-    return _buildWeekCardContentWithAllData(weekNumber, assignment, groups, members, dormId);
+    return _buildWeekCardContentWithAllData(
+      weekNumber,
+      assignment,
+      groups,
+      members,
+      dormId,
+    );
   }
 
   Widget _buildWeekCardContentWithAllData(
-    int weekNumber, 
-    CleaningAssignment? assignment, 
-    List<CleaningGroup> groups, 
+    int weekNumber,
+    CleaningAssignment? assignment,
+    List<CleaningGroup> groups,
     List<DormMember> members,
-    String dormId
+    String dormId,
   ) {
     final weekRange = _getWeekDateRange(
       _selectedDate.year,
@@ -325,7 +356,12 @@ class _WeeklyCleaningScheduleScreenState
               ),
               if (assignment != null) ...[
                 const SizedBox(height: 12),
-                _buildAssignmentInfoWithAllData(assignment, groups, members, dormId),
+                _buildAssignmentInfoWithAllData(
+                  assignment,
+                  groups,
+                  members,
+                  dormId,
+                ),
               ],
             ],
           ),
@@ -333,7 +369,6 @@ class _WeeklyCleaningScheduleScreenState
       ),
     );
   }
-
 
   Widget _buildAssignmentNames(CleaningAssignment assignment, String dormId) {
     if (assignment.isGroupAssignment) {
@@ -346,7 +381,9 @@ class _WeeklyCleaningScheduleScreenState
               .firstOrNull;
           return Text(
             group?.name ?? 'Unknown Group',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
           );
         },
         loading: () => Text(
@@ -411,16 +448,14 @@ class _WeeklyCleaningScheduleScreenState
     CleaningAssignment assignment,
     List<CleaningGroup> groups,
     List<DormMember> members,
-    String dormId
+    String dormId,
   ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -438,9 +473,9 @@ class _WeeklyCleaningScheduleScreenState
                   assignment.isGroupAssignment
                       ? 'Group Assignment'
                       : 'Individual Assignment',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 _buildAssignmentNamesWithData(assignment, groups, members),
               ],
@@ -454,17 +489,19 @@ class _WeeklyCleaningScheduleScreenState
   Widget _buildAssignmentNamesWithData(
     CleaningAssignment assignment,
     List<CleaningGroup> groups,
-    List<DormMember> members
+    List<DormMember> members,
   ) {
     if (assignment.isGroupAssignment) {
       // For group assignments, find group name from data
       final group = groups
           .where((g) => g.id == assignment.assignedGroupId)
           .firstOrNull;
-      
+
       return Text(
         group?.name ?? 'Unknown Group',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
       );
     } else {
       // For individual assignments, find member names from data
@@ -472,18 +509,22 @@ class _WeeklyCleaningScheduleScreenState
       final assignedMembers = members
           .where((m) => memberIds.contains(m.id))
           .toList();
-      
+
       if (assignedMembers.isEmpty) {
         return Text(
           'Unknown Members',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         );
       }
-      
+
       final memberNames = assignedMembers.map((m) => m.displayName).join(', ');
       return Text(
         memberNames,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
       );
     }
   }
@@ -706,9 +747,31 @@ class _WeeklyCleaningScheduleScreenState
   }
 
   void _showEditAssignmentDialog(CleaningAssignment assignment) {
-    // TODO: Implement edit assignment dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit assignment feature coming soon')),
+    showDialog(
+      context: context,
+      builder: (context) => EditAssignmentDialog(
+        assignment: assignment,
+        onAssignmentUpdated: (updatedAssignment) async {
+          try {
+            await ref.read(
+              updateCleaningAssignmentProvider(updatedAssignment).future,
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Assignment updated successfully!')),
+            );
+            // Invalidate assignments to refresh UI
+            final currentUserDorm = ref.read(currentUserDormProvider);
+            final dorm = currentUserDorm.value;
+            if (dorm != null) {
+              ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error updating assignment: $e')),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -739,6 +802,12 @@ class _WeeklyCleaningScheduleScreenState
                     content: Text('${assignment.weekLabel} assignment removed'),
                   ),
                 );
+                // Invalidate assignments to refresh UI immediately
+                final currentUserDorm = ref.read(currentUserDormProvider);
+                final dorm = currentUserDorm.value;
+                if (dorm != null) {
+                  ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));
+                }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error removing assignment: $e')),
@@ -787,10 +856,14 @@ class _WeeklyCleaningScheduleScreenState
                   );
 
                   final allAssignments = await assignmentsFuture;
-                  
+
                   // Filter assignments for the specific month
                   final assignments = allAssignments
-                      .where((a) => a.year == _selectedDate.year && a.month == _selectedDate.month)
+                      .where(
+                        (a) =>
+                            a.year == _selectedDate.year &&
+                            a.month == _selectedDate.month,
+                      )
                       .toList();
 
                   // Delete all assignments for this month

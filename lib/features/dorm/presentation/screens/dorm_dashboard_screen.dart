@@ -496,7 +496,9 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
 
   Widget _buildCurrentWeekAssignment() {
     final currentWeek = CleaningAssignment.getWeekOfMonth(DateTime.now());
-    final assignmentsAsync = ref.watch(dormCleaningAssignmentsProvider(widget.dorm.id));
+    final assignmentsAsync = ref.watch(
+      dormCleaningAssignmentsProvider(widget.dorm.id),
+    );
 
     return GlassCard(
       type: GlassType.primary,
@@ -519,7 +521,8 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             ),
             const SizedBox(height: 16),
             assignmentsAsync.when(
-              data: (assignments) => _buildCurrentAssignmentContent(currentWeek, assignments),
+              data: (assignments) =>
+                  _buildCurrentAssignmentContent(currentWeek, assignments),
               loading: () => Container(
                 padding: const EdgeInsets.all(16),
                 child: const Center(child: CircularProgressIndicator()),
@@ -544,9 +547,32 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
           final group = groups
               .where((g) => g.id == currentAssignment.assignedGroupId)
               .firstOrNull;
-          return Text(
-            "Group: ${group?.name ?? 'Unknown Group'}",
-            style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.w600),
+
+          Color groupColor = AppColors.primary;
+          if (group?.color != null) {
+            groupColor = Color(
+              int.parse('0xFF${group!.color!.replaceAll('#', '')}'),
+            );
+          }
+
+          return Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: groupColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Group: ${group?.name ?? 'Unknown Group'}",
+                style: AppTypography.bodyLg.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           );
         },
         loading: () => Text(
@@ -567,15 +593,17 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
           final assignedMembers = members
               .where((m) => memberIds.contains(m.id))
               .toList();
-          
+
           if (assignedMembers.isEmpty) {
             return Text(
               "Individual: Unknown Members",
               style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.w600),
             );
           }
-          
-          final memberNames = assignedMembers.map((m) => m.displayName).join(", ");
+
+          final memberNames = assignedMembers
+              .map((m) => m.displayName)
+              .join(", ");
           return Text(
             "Individual: $memberNames",
             style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.w600),
@@ -593,7 +621,10 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     }
   }
 
-  Widget _buildCurrentAssignmentContent(int currentWeek, List<CleaningAssignment> assignments) {
+  Widget _buildCurrentAssignmentContent(
+    int currentWeek,
+    List<CleaningAssignment> assignments,
+  ) {
     final now = DateTime.now();
     final currentAssignment = assignments
         .where(
@@ -617,7 +648,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             Icon(Icons.info_outline, color: Colors.grey.shade600),
             const SizedBox(width: 16),
             Text(
-              'No assignment for this week yet',
+              'No assignment for this week',
               style: AppTypography.bodyMd.copyWith(color: Colors.grey.shade600),
             ),
           ],
@@ -656,8 +687,10 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
   }
 
   Widget _buildCalendar() {
-    final assignmentsAsync = ref.watch(dormCleaningAssignmentsProvider(widget.dorm.id));
-    
+    final assignmentsAsync = ref.watch(
+      dormCleaningAssignmentsProvider(widget.dorm.id),
+    );
+
     return GlassCard(
       type: GlassType.primary,
       child: Padding(
@@ -683,60 +716,114 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                     });
                   }
                 });
-                
-                return TableCalendar<CleaningAssignment>(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  calendarFormat: CalendarFormat.month,
-                  startingDayOfWeek: StartingDayOfWeek.monday,
-                  headerStyle: HeaderStyle(
-                    titleCentered: true,
-                    formatButtonVisible: false,
-                    titleTextStyle: AppTypography.h3.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                    leftChevronIcon: Icon(
-                      Icons.chevron_left,
-                      color: AppColors.primary,
-                    ),
-                    rightChevronIcon: Icon(
-                      Icons.chevron_right,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  calendarStyle: CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.7),
-                      shape: BoxShape.circle,
-                    ),
-                    selectedDecoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    markersMaxCount: 1,
-                    markerDecoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    weekendTextStyle: TextStyle(color: Colors.grey.shade600),
-                  ),
-                  eventLoader: (day) {
-                    return _getAssignmentsForDay(day);
-                  },
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                    _showDayAssignment(selectedDay);
-                  },
-                  onPageChanged: (focusedDay) {
-                    setState(() {
-                      _focusedDay = focusedDay;
-                    });
+
+                return Consumer(
+                  builder: (context, ref, child) {
+                    final groupsAsync = ref.watch(
+                      dormCleaningGroupsProvider(widget.dorm.id),
+                    );
+
+                    return groupsAsync.when(
+                      data: (groups) => TableCalendar<CleaningAssignment>(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focusedDay,
+                        selectedDayPredicate: (day) =>
+                            isSameDay(_selectedDay, day),
+                        calendarFormat: CalendarFormat.month,
+                        startingDayOfWeek: StartingDayOfWeek.monday,
+                        headerStyle: HeaderStyle(
+                          titleCentered: true,
+                          formatButtonVisible: false,
+                          titleTextStyle: AppTypography.h3.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                          leftChevronIcon: Icon(
+                            Icons.chevron_left,
+                            color: AppColors.primary,
+                          ),
+                          rightChevronIcon: Icon(
+                            Icons.chevron_right,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        calendarStyle: CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.7),
+                            shape: BoxShape.circle,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          markersMaxCount: 1,
+                          weekendTextStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        calendarBuilders: CalendarBuilders(
+                          markerBuilder: (context, date, assignments) {
+                            if (assignments.isEmpty)
+                              return const SizedBox.shrink();
+
+                            final assignment = assignments.first;
+                            Color markerColor =
+                                AppColors.primary; // Default color
+
+                            // Find the group color if assigned to a group
+                            if (assignment.assignedGroupId != null) {
+                              final group = groups.firstWhere(
+                                (g) => g.id == assignment.assignedGroupId,
+                                orElse: () => groups.first,
+                              );
+                              if (group.color != null) {
+                                markerColor = Color(
+                                  int.parse(
+                                    '0xFF${group.color!.replaceAll('#', '')}',
+                                  ),
+                                );
+                              }
+                            }
+
+                            return Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: markerColor,
+                                shape: BoxShape.circle,
+                              ),
+                            );
+                          },
+                        ),
+                        eventLoader: (day) {
+                          return _getAssignmentsForDay(day);
+                        },
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay = focusedDay;
+                          });
+                          _showDayAssignment(selectedDay);
+                        },
+                        onPageChanged: (focusedDay) {
+                          setState(() {
+                            _focusedDay = focusedDay;
+                          });
+                        },
+                      ),
+                      loading: () => Container(
+                        height: 300,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, stack) => Container(
+                        height: 200,
+                        child: Center(
+                          child: Text('Error loading groups: $error'),
+                        ),
+                      ),
+                    );
                   },
                 );
               },
