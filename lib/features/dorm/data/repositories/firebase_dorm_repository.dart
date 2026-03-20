@@ -32,17 +32,13 @@ class FirebaseDormRepository implements IDormRepository {
     String? description,
   }) async {
     try {
-      print('DORM_DEBUG: Starting dorm creation...');
       final user = _currentUser;
-      print('DORM_DEBUG: Current user: ${user.uid}');
       
       // Check if user document exists
       final userDoc = await _firestore.collection(FirestorePaths.users).doc(user.uid).get();
-      print('DORM_DEBUG: User document exists: ${userDoc.exists}');
       
       if (!userDoc.exists) {
         // Create user document first
-        print('DORM_DEBUG: Creating user document...');
         await _firestore.collection(FirestorePaths.users).doc(user.uid).set({
           'displayName': user.displayName ?? user.email?.split('@').first ?? 'Unknown User',
           'email': user.email!,
@@ -50,16 +46,12 @@ class FirebaseDormRepository implements IDormRepository {
           'dormId': null,
           'fcmToken': null,
         }, SetOptions(merge: true));
-        print('DORM_DEBUG: User document created');
       }
       
-      print('DORM_DEBUG: Generating invite code...');
       final inviteCode = await _generateUniqueInviteCode();
-      print('DORM_DEBUG: Invite code generated: $inviteCode');
       
       final now = DateTime.now();
       final dormId = _firestore.collection(FirestorePaths.dorms).doc().id;
-      print('DORM_DEBUG: Dorm ID: $dormId');
 
       final dorm = DormModel(
         id: dormId,
@@ -80,7 +72,6 @@ class FirebaseDormRepository implements IDormRepository {
         joinedAt: now,
       );
 
-      print('DORM_DEBUG: Starting batch write...');
       final batch = _firestore.batch();
       
       batch.set(
@@ -100,16 +91,12 @@ class FirebaseDormRepository implements IDormRepository {
         {'dormId': dormId},
       );
 
-      print('DORM_DEBUG: Committing batch...');
       await batch.commit();
-      print('DORM_DEBUG: Batch committed successfully');
 
       return Right(dorm.toEntity());
     } on FirebaseException catch (e) {
-      print('DORM_DEBUG: FirebaseException: ${e.code} - ${e.message}');
       return Left(ServerFailure(e.message ?? 'Failed to create dorm', code: e.code));
     } catch (e) {
-      print('DORM_DEBUG: General error: $e');
       return Left(UnknownFailure('Failed to create dorm: $e'));
     }
   }
@@ -351,74 +338,53 @@ class FirebaseDormRepository implements IDormRepository {
         .doc(userId)
         .snapshots()
         .asyncMap((userDoc) async {
-      print('DORM_WATCH_DEBUG: Checking user dorm for userId: $userId');
-      print('DORM_WATCH_DEBUG: User doc exists: ${userDoc.exists}');
       
       if (!userDoc.exists) {
-        print('DORM_WATCH_DEBUG: User document does not exist');
         return null;
       }
       
       final userData = userDoc.data();
-      print('DORM_WATCH_DEBUG: User data: $userData');
       
       final dormId = userData?['dormId'] as String?;
-      print('DORM_WATCH_DEBUG: Found dormId: $dormId');
       
       if (dormId == null) {
-        print('DORM_WATCH_DEBUG: No dormId found in user document');
         return null;
       }
 
-      print('DORM_WATCH_DEBUG: Fetching dorm document: $dormId');
       final dormDoc = await _firestore
           .collection(FirestorePaths.dorms)
           .doc(dormId)
           .get();
 
-      print('DORM_WATCH_DEBUG: Dorm doc exists: ${dormDoc.exists}');
       
       if (!dormDoc.exists) {
-        print('DORM_WATCH_DEBUG: Dorm document does not exist');
         return null;
       }
 
       final dorm = DormModel.fromFirestore(dormDoc).toEntity();
-      print('DORM_WATCH_DEBUG: Found dorm: ${dorm.name} (${dorm.id})');
       return dorm;
     });
   }
 
   @override
   Stream<List<DormMember>> watchDormMembers(String dormId) {
-    print('DORM_MEMBERS_DEBUG: Starting to watch dorm members for dormId: $dormId');
-    print('DORM_MEMBERS_DEBUG: Collection path: ${FirestorePaths.dormMembers(dormId)}');
     
     return _firestore
         .collection(FirestorePaths.dormMembers(dormId))
         .orderBy('joinedAt')
         .snapshots()
         .map((snapshot) {
-          print('DORM_MEMBERS_DEBUG: Snapshot received with ${snapshot.docs.length} documents');
-          if (snapshot.docs.isEmpty) {
-            print('DORM_MEMBERS_DEBUG: No members found in collection');
-          } else {
-            print('DORM_MEMBERS_DEBUG: Member docs: ${snapshot.docs.map((doc) => doc.id).toList()}');
-          }
           
           try {
             final members = snapshot.docs
                 .map((doc) => DormMemberModel.fromFirestore(doc).toEntity())
                 .toList();
-            print('DORM_MEMBERS_DEBUG: Successfully parsed ${members.length} members');
             return members;
           } catch (e) {
-            print('DORM_MEMBERS_DEBUG: Error parsing members: $e');
             rethrow;
           }
         })
         .handleError((error) {
-          print('DORM_MEMBERS_DEBUG: Stream error: $error');
         });
   }
 

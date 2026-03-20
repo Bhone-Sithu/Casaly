@@ -31,16 +31,10 @@ class DormMemberModel extends DormMember {
 
   factory DormMemberModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    print('MEMBER_PARSE_DEBUG: Parsing member doc ${doc.id}');
-    print('MEMBER_PARSE_DEBUG: Raw data: $data');
-    
     try {
       final member = DormMemberModel.fromJson(data, doc.id);
-      print('MEMBER_PARSE_DEBUG: Successfully parsed member: ${member.displayName}');
       return member;
-    } catch (e, stackTrace) {
-      print('MEMBER_PARSE_DEBUG: Error parsing member ${doc.id}: $e');
-      print('MEMBER_PARSE_DEBUG: Stack trace: $stackTrace');
+    } catch (e) {
       rethrow;
     }
   }

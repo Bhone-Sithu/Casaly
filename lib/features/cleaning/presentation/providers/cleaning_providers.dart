@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/entities/cleaning_task.dart';
-import '../../domain/entities/cleaning_schedule.dart';
 import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../domain/repositories/i_cleaning_repository.dart';
@@ -18,12 +16,10 @@ final dormCleaningAssignmentsProvider =
       ref,
       dormId,
     ) async {
-      print('PROVIDER_DEBUG: Loading ALL assignments for dormId=$dormId');
       final repository = ref.watch(cleaningRepositoryProvider);
 
       // Just fetch all assignments for current month to start
       final now = DateTime.now();
-      print('PROVIDER_DEBUG: Current date is $now, fetching for ${now.year}/${now.month}');
       
       final result = await repository.getAssignmentsForMonth(
         dormId,
@@ -33,11 +29,9 @@ final dormCleaningAssignmentsProvider =
       
       return result.fold(
         (failure) {
-          print('PROVIDER_DEBUG: Failed to get assignments: ${failure.message}');
           throw Exception(failure.message);
         },
         (assignments) {
-          print('PROVIDER_DEBUG: Successfully loaded ${assignments.length} assignments');
           return assignments;
         },
       );
@@ -48,27 +42,14 @@ final createCleaningAssignmentProvider =
       ref,
       assignment,
     ) async {
-      print(
-        'PROVIDER_DEBUG: createCleaningAssignmentProvider called for Week ${assignment.weekNumber}',
-      );
       final repository = ref.watch(cleaningRepositoryProvider);
-      print(
-        'PROVIDER_DEBUG: Repository obtained, calling createCleaningAssignment',
-      );
       final result = await repository.createCleaningAssignment(assignment);
-      print('PROVIDER_DEBUG: Repository call completed');
 
       return result.fold(
         (failure) {
-          print(
-            'PROVIDER_DEBUG: Assignment creation failed: ${failure.message}',
-          );
           throw Exception(failure.message);
         },
         (assignment) {
-          print(
-            'PROVIDER_DEBUG: Assignment creation successful: ${assignment.id}',
-          );
           return assignment;
         },
       );
@@ -118,21 +99,14 @@ final dormCleaningGroupsProvider =
 
 final createCleaningGroupProvider =
     Provider.family<Future<CleaningGroup>, CleaningGroup>((ref, group) async {
-      print(
-        'PROVIDER_DEBUG: createCleaningGroupProvider called for group: ${group.name}',
-      );
       final repository = ref.watch(cleaningRepositoryProvider);
-      print('PROVIDER_DEBUG: Repository obtained, calling createCleaningGroup');
       final result = await repository.createCleaningGroup(group);
-      print('PROVIDER_DEBUG: Repository call completed');
 
       return result.fold(
         (failure) {
-          print('PROVIDER_DEBUG: Group creation failed: ${failure.message}');
           throw Exception(failure.message);
         },
         (group) {
-          print('PROVIDER_DEBUG: Group creation successful: ${group.id}');
           return group;
         },
       );

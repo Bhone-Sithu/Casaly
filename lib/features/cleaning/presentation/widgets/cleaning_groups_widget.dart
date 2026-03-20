@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/widgets/glass_container.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
@@ -148,10 +147,10 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
             ),
           ),
           child: Column(
@@ -173,7 +172,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             radius: 16,
             backgroundColor: Theme.of(
               context,
-            ).colorScheme.primary.withOpacity(0.2),
+            ).colorScheme.primary.withValues(alpha: 0.2),
             child: Text(
               member.initials,
               style: TextStyle(
@@ -252,10 +251,10 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
+          color: Colors.grey.withValues(alpha: 0.2),
           style: BorderStyle.solid,
         ),
       ),
@@ -293,10 +292,10 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -389,21 +388,15 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
         availableMembers: members,
         dormId: dormId,
         onGroupCreated: (group) async {
-          print('WIDGET_DEBUG: onGroupCreated called for group: ${group.name}');
-          print('WIDGET_DEBUG: Group details - dormId: ${group.dormId}, members: ${group.memberIds}');
           try {
-            print('WIDGET_DEBUG: About to call createCleaningGroupProvider');
             final createFuture = ref.read(createCleaningGroupProvider(group));
-            print('WIDGET_DEBUG: Provider called, awaiting result');
             await createFuture;
-            print('WIDGET_DEBUG: Group creation completed successfully');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Group created successfully!')),
             );
             // Invalidate groups provider to refresh UI immediately
             ref.invalidate(dormCleaningGroupsProvider(dormId));
           } catch (e) {
-            print('WIDGET_DEBUG: Error in group creation: $e');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error creating group: $e')),
             );

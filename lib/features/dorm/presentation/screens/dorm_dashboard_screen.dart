@@ -37,18 +37,11 @@ class DormDashboardScreen extends ConsumerWidget {
         }
 
         // Watch user's dorm
-        print('DASHBOARD_DEBUG: Watching dorm for user: ${user.uid}');
         final userDormAsync = ref.watch(userDormProvider(user.uid));
 
         return userDormAsync.when(
           data: (dorm) {
-            print(
-              'DASHBOARD_DEBUG: Dorm data received: ${dorm?.name ?? 'null'}',
-            );
             if (dorm == null) {
-              print(
-                'DASHBOARD_DEBUG: No dorm found, redirecting to dorm selection',
-              );
               // User has no dorm, redirect to dorm selection
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 context.go('/dorm-selection');
@@ -294,7 +287,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -345,7 +338,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -396,7 +389,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -447,7 +440,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -639,9 +632,9 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.1),
+          color: Colors.grey.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -660,9 +653,9 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -750,7 +743,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                         ),
                         calendarStyle: CalendarStyle(
                           todayDecoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.7),
+                            color: AppColors.primary.withValues(alpha: 0.7),
                             shape: BoxShape.circle,
                           ),
                           selectedDecoration: BoxDecoration(
@@ -764,8 +757,9 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                         ),
                         calendarBuilders: CalendarBuilders(
                           markerBuilder: (context, date, assignments) {
-                            if (assignments.isEmpty)
+                            if (assignments.isEmpty) {
                               return const SizedBox.shrink();
+                            }
 
                             final assignment = assignments.first;
                             Color markerColor =
@@ -813,11 +807,11 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                           });
                         },
                       ),
-                      loading: () => Container(
+                      loading: () => const SizedBox(
                         height: 300,
-                        child: const Center(child: CircularProgressIndicator()),
+                        child: Center(child: CircularProgressIndicator()),
                       ),
-                      error: (error, stack) => Container(
+                      error: (error, stack) => SizedBox(
                         height: 200,
                         child: Center(
                           child: Text('Error loading groups: $error'),
@@ -827,14 +821,16 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   },
                 );
               },
-              loading: () => Container(
+              loading: () => const SizedBox(
                 height: 400,
-                child: const Center(child: CircularProgressIndicator()),
+                child: Center(child: CircularProgressIndicator()),
               ),
-              error: (error, stack) => Container(
+              error: (error, stack) => SizedBox(
                 height: 200,
-                padding: const EdgeInsets.all(16),
-                child: Center(child: Text('Error loading calendar: $error')),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(child: Text('Error loading calendar: $error')),
+                ),
               ),
             ),
           ],

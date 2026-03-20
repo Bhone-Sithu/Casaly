@@ -47,7 +47,6 @@ class _WeeklyAssignmentDialogState
         }
 
         _currentDormId = dorm.id;
-        print('ASSIGNMENT_DIALOG_DEBUG: Set dorm ID to: $_currentDormId');
         final dormMembersAsync = ref.watch(dormMembersProvider(dorm.id));
 
         final cleaningGroupsAsync = ref.watch(
@@ -144,7 +143,7 @@ class _WeeklyAssignmentDialogState
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.1),
+                        ).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -274,7 +273,7 @@ class _WeeklyAssignmentDialogState
                       radius: 16,
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.2),
+                      ).colorScheme.primary.withValues(alpha: 0.2),
                       child: Text(
                         member.initials,
                         style: TextStyle(
@@ -312,7 +311,7 @@ class _WeeklyAssignmentDialogState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -384,7 +383,7 @@ class _WeeklyAssignmentDialogState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
+        color: Colors.grey.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -513,35 +512,18 @@ class _WeeklyAssignmentDialogState
       createdAt: DateTime.now(),
     );
 
-    print(
-      'ASSIGNMENT_DIALOG_DEBUG: Creating assignment for week ${widget.weekNumber}',
-    );
-    print(
-      'ASSIGNMENT_DIALOG_DEBUG: Assignment details - dormId: ${assignment.dormId}, type: $_assignmentType',
-    );
-    print(
-      'ASSIGNMENT_DIALOG_DEBUG: Selected group: $_selectedGroupId, selected members: $_selectedMemberIds',
-    );
 
     Navigator.pop(context);
 
     try {
-      print(
-        'ASSIGNMENT_DIALOG_DEBUG: About to call createCleaningAssignmentProvider',
-      );
       final createFuture = ref.read(
         createCleaningAssignmentProvider(assignment),
       );
-      print('ASSIGNMENT_DIALOG_DEBUG: Provider called, awaiting result');
       await createFuture;
-      print(
-        'ASSIGNMENT_DIALOG_DEBUG: Assignment creation completed successfully',
-      );
       
       // Invalidate providers to ensure UI updates immediately
       if (_currentDormId != null) {
         ref.invalidate(dormCleaningAssignmentsProvider(_currentDormId!));
-        print('ASSIGNMENT_DIALOG_DEBUG: Invalidated assignments provider for dorm: $_currentDormId');
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -550,7 +532,6 @@ class _WeeklyAssignmentDialogState
         ),
       );
     } catch (e) {
-      print('ASSIGNMENT_DIALOG_DEBUG: Error in assignment creation: $e');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error creating assignment: $e')));

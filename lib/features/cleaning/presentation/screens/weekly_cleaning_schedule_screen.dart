@@ -76,9 +76,6 @@ class _WeeklyCleaningScheduleScreenState
     List<DormMember> members,
     String dormId,
   ) {
-    print(
-      'SCHEDULE_FINAL: Building with ${assignments.length} assignments, ${groups.length} groups, ${members.length} members',
-    );
 
     return Scaffold(
       body: CustomScrollView(
@@ -235,9 +232,6 @@ class _WeeklyCleaningScheduleScreenState
         )
         .firstOrNull;
 
-    print(
-      'WEEK_CARD_FINAL: Week $weekNumber - Found assignment: ${assignment?.id ?? 'null'}',
-    );
 
     return _buildWeekCardContentWithAllData(
       weekNumber,
@@ -264,7 +258,6 @@ class _WeeklyCleaningScheduleScreenState
         CleaningAssignment.getWeekOfMonth(DateTime.now()) == weekNumber &&
         DateTime.now().year == _selectedDate.year &&
         DateTime.now().month == _selectedDate.month;
-    print("Weekly Assignment : $assignment");
     return GlassContainer(
       child: Container(
         decoration: BoxDecoration(
@@ -370,79 +363,6 @@ class _WeeklyCleaningScheduleScreenState
     );
   }
 
-  Widget _buildAssignmentNames(CleaningAssignment assignment, String dormId) {
-    if (assignment.isGroupAssignment) {
-      // For group assignments, get group name
-      final groupsAsync = ref.watch(dormCleaningGroupsProvider(dormId));
-      return groupsAsync.when(
-        data: (groups) {
-          final group = groups
-              .where((g) => g.id == assignment.assignedGroupId)
-              .firstOrNull;
-          return Text(
-            group?.name ?? 'Unknown Group',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          );
-        },
-        loading: () => Text(
-          'Loading...',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-        ),
-        error: (_, __) => Text(
-          'Unknown Group',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-        ),
-      );
-    } else {
-      // For individual assignments, get member names
-      final membersAsync = ref.watch(dormMembersProvider(dormId));
-      return membersAsync.when(
-        data: (members) {
-          final memberIds = assignment.assignedMemberIds ?? [];
-          final assignedMembers = members
-              .where((m) => memberIds.contains(m.id))
-              .toList();
-
-          if (assignedMembers.isEmpty) {
-            return Text(
-              'Unknown Members',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-            );
-          }
-
-          final memberNames = assignedMembers
-              .map((m) => m.displayName)
-              .join(', ');
-          return Text(
-            memberNames,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          );
-        },
-        loading: () => Text(
-          'Loading...',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-        ),
-        error: (_, __) => Text(
-          '${assignment.assignedMemberIds?.length ?? 0} member(s)',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-        ),
-      );
-    }
-  }
 
   Widget _buildAssignmentInfoWithAllData(
     CleaningAssignment assignment,
@@ -453,9 +373,9 @@ class _WeeklyCleaningScheduleScreenState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -529,81 +449,7 @@ class _WeeklyCleaningScheduleScreenState
     }
   }
 
-  Widget _buildAssignmentInfoSkeleton(
-    CleaningAssignment assignment,
-    bool isCurrentWeek,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isCurrentWeek
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-            : Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isCurrentWeek
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-              : Colors.white.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            assignment.isGroupAssignment ? Icons.group : Icons.person,
-            color: Theme.of(context).colorScheme.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  assignment.isGroupAssignment
-                      ? 'Group Assignment'
-                      : 'Individual Assignment',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  'Loading...',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildNoAssignmentCard(int weekNumber) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.3),
-          style: BorderStyle.solid,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'No assignment for this week',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildQuickActions() {
     return GlassContainer(
@@ -678,7 +524,6 @@ class _WeeklyCleaningScheduleScreenState
   }
 
   int _getWeeksInMonth(DateTime date) {
-    final firstDay = DateTime(date.year, date.month, 1);
     final lastDay = DateTime(date.year, date.month + 1, 0);
     return CleaningAssignment.getWeekOfMonth(lastDay);
   }
