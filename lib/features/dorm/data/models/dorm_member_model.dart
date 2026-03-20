@@ -16,14 +16,14 @@ class DormMemberModel extends DormMember {
   factory DormMemberModel.fromJson(Map<String, dynamic> json, String docId) {
     return DormMemberModel(
       id: docId,
-      userId: json['userId'] as String,
-      displayName: json['displayName'] as String,
-      email: json['email'] as String,
+      userId: json['userId'] as String? ?? docId,
+      displayName: json['displayName'] as String? ?? 'Unknown User',
+      email: json['email'] as String? ?? '',
       role: MemberRole.values.firstWhere(
         (e) => e.toString().split('.').last == json['role'],
         orElse: () => MemberRole.member,
       ),
-      joinedAt: (json['joinedAt'] as Timestamp).toDate(),
+      joinedAt: (json['joinedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       cleaningGroupId: json['cleaningGroupId'] as String?,
       profileImageUrl: json['profileImageUrl'] as String?,
     );
@@ -31,7 +31,18 @@ class DormMemberModel extends DormMember {
 
   factory DormMemberModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return DormMemberModel.fromJson(data, doc.id);
+    print('MEMBER_PARSE_DEBUG: Parsing member doc ${doc.id}');
+    print('MEMBER_PARSE_DEBUG: Raw data: $data');
+    
+    try {
+      final member = DormMemberModel.fromJson(data, doc.id);
+      print('MEMBER_PARSE_DEBUG: Successfully parsed member: ${member.displayName}');
+      return member;
+    } catch (e, stackTrace) {
+      print('MEMBER_PARSE_DEBUG: Error parsing member ${doc.id}: $e');
+      print('MEMBER_PARSE_DEBUG: Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {

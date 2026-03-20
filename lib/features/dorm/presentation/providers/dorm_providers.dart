@@ -33,6 +33,16 @@ final dormMembersProvider = StreamProvider.family<List<DormMember>, String>((ref
   return dormRepository.watchDormMembers(dormId);
 });
 
+// Non-streaming version for cleaning schedule (no real-time updates needed)
+final dormMembersOnceProvider = FutureProvider.family<List<DormMember>, String>((ref, dormId) async {
+  final dormRepository = ref.watch(dormRepositoryProvider);
+  final result = await dormRepository.getDormMembers(dormId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (members) => members,
+  );
+});
+
 final createDormProvider = FutureProvider.family<Dorm, CreateDormParams>((ref, params) async {
   final dormRepository = ref.watch(dormRepositoryProvider);
   final result = await dormRepository.createDorm(

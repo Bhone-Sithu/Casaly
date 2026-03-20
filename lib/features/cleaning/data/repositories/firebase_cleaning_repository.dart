@@ -3,9 +3,13 @@ import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/cleaning_task.dart';
 import '../../domain/entities/cleaning_schedule.dart';
+import '../../domain/entities/cleaning_assignment.dart';
+import '../../domain/entities/cleaning_group.dart';
 import '../../domain/repositories/i_cleaning_repository.dart';
 import '../models/cleaning_task_model.dart';
 import '../models/cleaning_schedule_model.dart';
+import '../models/cleaning_assignment_model.dart';
+import '../models/cleaning_group_model.dart';
 
 class FirebaseCleaningRepository implements ICleaningRepository {
   final FirebaseFirestore _firestore;
@@ -18,6 +22,11 @@ class FirebaseCleaningRepository implements ICleaningRepository {
       _firestore.collection('cleaning_schedules');
   CollectionReference get _tasksCollection => 
       _firestore.collection('cleaning_tasks');
+  
+  CollectionReference _assignmentsCollection(String dormId) => 
+      _firestore.collection('dorms').doc(dormId).collection('cleaning_assignments');
+  CollectionReference _groupsCollection(String dormId) => 
+      _firestore.collection('dorms').doc(dormId).collection('cleaning_groups');
 
   @override
   Stream<List<CleaningSchedule>> watchDormCleaningSchedules(String dormId) {
@@ -272,6 +281,198 @@ class FirebaseCleaningRepository implements ICleaningRepository {
       return Right(tasks);
     } catch (e) {
       return Left(UnknownFailure('Error getting overdue tasks: $e'));
+    }
+  }
+
+  // Cleaning Assignments (Weekly) Implementation
+  @override
+  Stream<List<CleaningAssignment>> watchDormCleaningAssignments(String dormId) {
+    return _assignmentsCollection(dormId)
+        .orderBy('year', descending: true)
+        .orderBy('month', descending: true)
+        .orderBy('weekNumber', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CleaningAssignmentModel.fromFirestore(doc).toEntity())
+            .toList());
+  }
+
+  @override
+  Future<Either<Failure, CleaningAssignment>> createCleaningAssignment(CleaningAssignment assignment) async {
+    try {
+      print('CLEANING_ASSIGNMENT_DEBUG: Starting to create assignment for Week ${assignment.weekNumber}');
+      print('CLEANING_ASSIGNMENT_DEBUG: Assignment data: dormId=${assignment.dormId}, year=${assignment.year}, month=${assignment.month}');
+      print('CLEANING_ASSIGNMENT_DEBUG: Assigned group: ${assignment.assignedGroupId}');
+      print('CLEANING_ASSIGNMENT_DEBUG: Assigned members: ${assignment.assignedMemberIds}');
+      
+      final assignmentModel = CleaningAssignmentModel.fromEntity(assignment);
+      print('CLEANING_ASSIGNMENT_DEBUG: Assignment model created, converting to Firestore format');
+      
+      final firestoreData = assignmentModel.toFirestore();
+      print('CLEANING_ASSIGNMENT_DEBUG: Firestore data: $firestoreData');
+      
+      final assignmentsCollection = _assignmentsCollection(assignment.dormId);
+      print('CLEANING_ASSIGNMENT_DEBUG: Collection path: ${assignmentsCollection.path}');
+      
+      final doc = await assignmentsCollection.add(firestoreData);
+      print('CLEANING_ASSIGNMENT_DEBUG: Document created with ID: ${doc.id}');
+      
+      final createdAssignment = assignmentModel.copyWith(id: doc.id);
+      print('CLEANING_ASSIGNMENT_DEBUG: Assignment creation successful');
+      return Right(createdAssignment);
+    } catch (e, stackTrace) {
+      print('CLEANING_ASSIGNMENT_DEBUG: Error creating assignment: $e');
+      print('CLEANING_ASSIGNMENT_DEBUG: Stack trace: $stackTrace');
+      return Left(UnknownFailure('Error creating cleaning assignment: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CleaningAssignment>> updateCleaningAssignment(CleaningAssignment assignment) async {
+    try {
+      final assignmentModel = CleaningAssignmentModel.fromEntity(assignment);
+      await _assignmentsCollection(assignment.dormId).doc(assignment.id).update(assignmentModel.toFirestore());
+      
+      return Right(assignment);
+    } catch (e) {
+      return Left(UnknownFailure('Error updating cleaning assignment: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCleaningAssignment(String assignmentId, String dormId) async {
+    try {
+      await _assignmentsCollection(dormId).doc(assignmentId).delete();
+      return const Right(null);
+    } catch (e) {
+      return Left(UnknownFailure('Error deleting cleaning assignment: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CleaningAssignment>>> getAssignmentsForMonth(String dormId, int year, int month) async {
+    try {
+      print('ASSIGNMENT_DEBUG: Getting assignments for dormId=$dormId, year=$year, month=$month');
+      print('ASSIGNMENT_DEBUG: Collection path: ${_assignmentsCollection(dormId).path}');
+      
+      // Get ALL assignments and filter client-side to avoid index requirements
+      final querySnapshot = await _assignmentsCollection(dormId).get();
+
+      print('ASSIGNMENT_DEBUG: Found ${querySnapshot.docs.length} total assignments');
+      
+      final allAssignments = querySnapshot.docs
+          .map((doc) => CleaningAssignmentModel.fromFirestore(doc).toEntity())
+          .toList();
+
+      // Filter client-side for the specific month
+      final filteredAssignments = allAssignments
+          .where((assignment) => assignment.year == year && assignment.month == month)
+          .toList();
+
+      print('ASSIGNMENT_DEBUG: Filtered to ${filteredAssignments.length} assignments for $year/$month');
+      return Right(filteredAssignments);
+    } catch (e) {
+      print('ASSIGNMENT_DEBUG: Error getting assignments for month: $e');
+      return Left(UnknownFailure('Error getting assignments for month: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CleaningAssignment?>> getAssignmentForWeek(String dormId, int year, int month, int weekNumber) async {
+    try {
+      final querySnapshot = await _assignmentsCollection(dormId)
+          .where('year', isEqualTo: year)
+          .where('month', isEqualTo: month)
+          .where('weekNumber', isEqualTo: weekNumber)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return const Right(null);
+      }
+
+      final assignment = CleaningAssignmentModel.fromFirestore(querySnapshot.docs.first);
+      return Right(assignment);
+    } catch (e) {
+      return Left(UnknownFailure('Error getting assignment for week: $e'));
+    }
+  }
+
+  // Cleaning Groups Implementation
+  @override
+  Stream<List<CleaningGroup>> watchDormCleaningGroups(String dormId) {
+    return _groupsCollection(dormId)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CleaningGroupModel.fromFirestore(doc).toEntity())
+            .toList());
+  }
+
+  @override
+  Future<Either<Failure, List<CleaningGroup>>> getDormCleaningGroups(String dormId) async {
+    try {
+      final querySnapshot = await _groupsCollection(dormId)
+          .orderBy('createdAt', descending: false)
+          .get();
+
+      final groups = querySnapshot.docs
+          .map((doc) => CleaningGroupModel.fromFirestore(doc).toEntity())
+          .toList();
+
+      return Right(groups);
+    } catch (e) {
+      return Left(UnknownFailure('Error getting cleaning groups: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CleaningGroup>> createCleaningGroup(CleaningGroup group) async {
+    try {
+      print('CLEANING_GROUP_DEBUG: Starting to create group: ${group.name}');
+      print('CLEANING_GROUP_DEBUG: Group data: dormId=${group.dormId}, memberIds=${group.memberIds}');
+      
+      final groupModel = CleaningGroupModel.fromEntity(group);
+      print('CLEANING_GROUP_DEBUG: Group model created, converting to Firestore format');
+      
+      final firestoreData = groupModel.toFirestore();
+      print('CLEANING_GROUP_DEBUG: Firestore data: $firestoreData');
+      
+      final groupsCollection = _groupsCollection(group.dormId);
+      print('CLEANING_GROUP_DEBUG: Collection path: ${groupsCollection.path}');
+      
+      final doc = await groupsCollection.add(firestoreData);
+      print('CLEANING_GROUP_DEBUG: Document created with ID: ${doc.id}');
+      
+      final createdGroup = groupModel.copyWith(id: doc.id);
+      print('CLEANING_GROUP_DEBUG: Group creation successful');
+      return Right(createdGroup);
+    } catch (e, stackTrace) {
+      print('CLEANING_GROUP_DEBUG: Error creating group: $e');
+      print('CLEANING_GROUP_DEBUG: Stack trace: $stackTrace');
+      return Left(UnknownFailure('Error creating cleaning group: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CleaningGroup>> updateCleaningGroup(CleaningGroup group) async {
+    try {
+      final groupModel = CleaningGroupModel.fromEntity(group);
+      await _groupsCollection(group.dormId).doc(group.id).update(groupModel.toFirestore());
+      
+      return Right(group);
+    } catch (e) {
+      return Left(UnknownFailure('Error updating cleaning group: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCleaningGroup(String groupId, String dormId) async {
+    try {
+      await _groupsCollection(dormId).doc(groupId).delete();
+      return const Right(null);
+    } catch (e) {
+      return Left(UnknownFailure('Error deleting cleaning group: $e'));
     }
   }
 }

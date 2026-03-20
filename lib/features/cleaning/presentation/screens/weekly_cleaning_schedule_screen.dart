@@ -5,6 +5,7 @@ import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../providers/cleaning_providers.dart';
 import '../widgets/weekly_assignment_dialog.dart';
 import '../widgets/cleaning_groups_widget.dart';
 
@@ -19,11 +20,55 @@ class WeeklyCleaningScheduleScreen extends ConsumerStatefulWidget {
 class _WeeklyCleaningScheduleScreenState
     extends ConsumerState<WeeklyCleaningScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
-  List<CleaningAssignment> _assignments =
-      []; // TODO: Replace with provider data
-
+  
   @override
   Widget build(BuildContext context) {
+    // Watch providers at the top level for stability
+    final currentUserDorm = ref.watch(currentUserDormProvider);
+    
+    return currentUserDorm.when(
+      data: (dorm) {
+        if (dorm == null) {
+          return Scaffold(
+            body: const Center(child: Text('No dorm found. Please join or create a dorm first.')),
+          );
+        }
+        
+        final assignmentsAsync = ref.watch(dormCleaningAssignmentsProvider(dorm.id));
+        final groupsAsync = ref.watch(dormCleaningGroupsProvider(dorm.id));
+        final membersAsync = ref.watch(dormMembersOnceProvider(dorm.id));
+        
+        return assignmentsAsync.when(
+          data: (assignments) {
+            return groupsAsync.when(
+              data: (groups) {
+                return membersAsync.when(
+                  data: (members) => _buildScaffoldWithAllData(assignments, groups, members, dorm.id),
+                  loading: () => _buildScaffoldLoading(),
+                  error: (_, __) => _buildScaffoldError(),
+                );
+              },
+              loading: () => _buildScaffoldLoading(),
+              error: (_, __) => _buildScaffoldError(),
+            );
+          },
+          loading: () => _buildScaffoldLoading(),
+          error: (_, __) => _buildScaffoldError(),
+        );
+      },
+      loading: () => _buildScaffoldLoading(),
+      error: (_, __) => _buildScaffoldError(),
+    );
+  }
+  
+  Widget _buildScaffoldWithAllData(
+    List<CleaningAssignment> assignments, 
+    List<CleaningGroup> groups, 
+    List<DormMember> members,
+    String dormId
+  ) {
+    print('SCHEDULE_FINAL: Building with ${assignments.length} assignments, ${groups.length} groups, ${members.length} members');
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -38,22 +83,16 @@ class _WeeklyCleaningScheduleScreenState
                 onPressed: () => _showGroupsBottomSheet(),
                 tooltip: 'Manage Groups',
               ),
-              IconButton(
-                icon: const Icon(Icons.auto_mode),
-                onPressed: () => _showAutoAssignDialog(),
-                tooltip: 'Auto Assign',
-              ),
             ],
           ),
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _buildCurrentWeekInfo(),
                 const SizedBox(height: 20),
                 _buildMonthSelector(),
                 const SizedBox(height: 20),
-                _buildWeeklySchedule(),
+                _buildWeeklyScheduleWithAllData(assignments, groups, members, dormId),
                 const SizedBox(height: 20),
                 _buildQuickActions(),
                 const SizedBox(height: 100),
@@ -64,48 +103,67 @@ class _WeeklyCleaningScheduleScreenState
       ),
     );
   }
-
-  Widget _buildCurrentWeekInfo() {
-    final currentWeek = CleaningAssignment.getWeekOfMonth(DateTime.now());
-    final currentAssignment = _assignments
-        .where(
-          (a) =>
-              a.year == _selectedDate.year &&
-              a.month == _selectedDate.month &&
-              a.weekNumber == currentWeek,
-        )
-        .firstOrNull;
-
-    return GlassContainer(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'This Week (Week $currentWeek)',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (currentAssignment != null)
-              _buildAssignmentInfo(currentAssignment, isCurrentWeek: true)
-            else
-              _buildNoAssignmentCard(currentWeek),
-          ],
-        ),
+  
+  Widget _buildScaffoldLoading() {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            title: const Text('Cleaning Schedule'),
+            floating: true,
+            backgroundColor: Colors.transparent,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+          ),
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
       ),
+    );
+  }
+  
+  Widget _buildScaffoldError() {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            title: const Text('Cleaning Schedule'),
+            floating: true,
+            backgroundColor: Colors.transparent,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+          ),
+          const SliverFillRemaining(
+            child: Center(child: Text('Error loading cleaning schedule')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyScheduleWithAllData(
+    List<CleaningAssignment> assignments, 
+    List<CleaningGroup> groups, 
+    List<DormMember> members,
+    String dormId
+  ) {
+    final weeksInMonth = _getWeeksInMonth(_selectedDate);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Weekly Assignments',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(weeksInMonth, (index) {
+          final weekNumber = index + 1;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildWeekCardWithAllData(weekNumber, assignments, groups, members, dormId),
+          );
+        }),
+      ],
     );
   }
 
@@ -136,32 +194,16 @@ class _WeeklyCleaningScheduleScreenState
     );
   }
 
-  Widget _buildWeeklySchedule() {
-    final weeksInMonth = _getWeeksInMonth(_selectedDate);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Weekly Assignments',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        ...List.generate(weeksInMonth, (index) {
-          final weekNumber = index + 1;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildWeekCard(weekNumber),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildWeekCard(int weekNumber) {
-    final assignment = _assignments
+  Widget _buildWeekCardWithAllData(
+    int weekNumber, 
+    List<CleaningAssignment> assignments, 
+    List<CleaningGroup> groups, 
+    List<DormMember> members,
+    String dormId
+  ) {
+    // Filter assignments for the current month and week
+    final assignment = assignments
         .where(
           (a) =>
               a.year == _selectedDate.year &&
@@ -170,6 +212,18 @@ class _WeeklyCleaningScheduleScreenState
         )
         .firstOrNull;
 
+    print('WEEK_CARD_FINAL: Week $weekNumber - Found assignment: ${assignment?.id ?? 'null'}');
+
+    return _buildWeekCardContentWithAllData(weekNumber, assignment, groups, members, dormId);
+  }
+
+  Widget _buildWeekCardContentWithAllData(
+    int weekNumber, 
+    CleaningAssignment? assignment, 
+    List<CleaningGroup> groups, 
+    List<DormMember> members,
+    String dormId
+  ) {
     final weekRange = _getWeekDateRange(
       _selectedDate.year,
       _selectedDate.month,
@@ -179,7 +233,7 @@ class _WeeklyCleaningScheduleScreenState
         CleaningAssignment.getWeekOfMonth(DateTime.now()) == weekNumber &&
         DateTime.now().year == _selectedDate.year &&
         DateTime.now().month == _selectedDate.month;
-
+    print("Weekly Assignment : $assignment");
     return GlassContainer(
       child: Container(
         decoration: BoxDecoration(
@@ -271,7 +325,7 @@ class _WeeklyCleaningScheduleScreenState
               ),
               if (assignment != null) ...[
                 const SizedBox(height: 12),
-                _buildAssignmentInfo(assignment),
+                _buildAssignmentInfoWithAllData(assignment, groups, members, dormId),
               ],
             ],
           ),
@@ -280,11 +334,164 @@ class _WeeklyCleaningScheduleScreenState
     );
   }
 
-  Widget _buildAssignmentInfo(
-    CleaningAssignment assignment, {
-    bool isCurrentWeek = false,
-  }) {
-    // TODO: Get actual user/group data from providers
+
+  Widget _buildAssignmentNames(CleaningAssignment assignment, String dormId) {
+    if (assignment.isGroupAssignment) {
+      // For group assignments, get group name
+      final groupsAsync = ref.watch(dormCleaningGroupsProvider(dormId));
+      return groupsAsync.when(
+        data: (groups) {
+          final group = groups
+              .where((g) => g.id == assignment.assignedGroupId)
+              .firstOrNull;
+          return Text(
+            group?.name ?? 'Unknown Group',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+          );
+        },
+        loading: () => Text(
+          'Loading...',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+        error: (_, __) => Text(
+          'Unknown Group',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+      );
+    } else {
+      // For individual assignments, get member names
+      final membersAsync = ref.watch(dormMembersProvider(dormId));
+      return membersAsync.when(
+        data: (members) {
+          final memberIds = assignment.assignedMemberIds ?? [];
+          final assignedMembers = members
+              .where((m) => memberIds.contains(m.id))
+              .toList();
+
+          if (assignedMembers.isEmpty) {
+            return Text(
+              'Unknown Members',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            );
+          }
+
+          final memberNames = assignedMembers
+              .map((m) => m.displayName)
+              .join(', ');
+          return Text(
+            memberNames,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+          );
+        },
+        loading: () => Text(
+          'Loading...',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+        error: (_, __) => Text(
+          '${assignment.assignedMemberIds?.length ?? 0} member(s)',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+      );
+    }
+  }
+
+  Widget _buildAssignmentInfoWithAllData(
+    CleaningAssignment assignment,
+    List<CleaningGroup> groups,
+    List<DormMember> members,
+    String dormId
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            assignment.isGroupAssignment ? Icons.group : Icons.person,
+            color: Theme.of(context).colorScheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  assignment.isGroupAssignment
+                      ? 'Group Assignment'
+                      : 'Individual Assignment',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                _buildAssignmentNamesWithData(assignment, groups, members),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssignmentNamesWithData(
+    CleaningAssignment assignment,
+    List<CleaningGroup> groups,
+    List<DormMember> members
+  ) {
+    if (assignment.isGroupAssignment) {
+      // For group assignments, find group name from data
+      final group = groups
+          .where((g) => g.id == assignment.assignedGroupId)
+          .firstOrNull;
+      
+      return Text(
+        group?.name ?? 'Unknown Group',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+      );
+    } else {
+      // For individual assignments, find member names from data
+      final memberIds = assignment.assignedMemberIds ?? [];
+      final assignedMembers = members
+          .where((m) => memberIds.contains(m.id))
+          .toList();
+      
+      if (assignedMembers.isEmpty) {
+        return Text(
+          'Unknown Members',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        );
+      }
+      
+      final memberNames = assignedMembers.map((m) => m.displayName).join(', ');
+      return Text(
+        memberNames,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+      );
+    }
+  }
+
+  Widget _buildAssignmentInfoSkeleton(
+    CleaningAssignment assignment,
+    bool isCurrentWeek,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -319,7 +526,7 @@ class _WeeklyCleaningScheduleScreenState
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  'Group A', // TODO: Replace with actual group/member names
+                  'Loading...',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
@@ -483,11 +690,6 @@ class _WeeklyCleaningScheduleScreenState
         weekNumber: weekNumber,
         year: _selectedDate.year,
         month: _selectedDate.month,
-        onAssignmentCreated: (assignment) {
-          setState(() {
-            _assignments.add(assignment);
-          });
-        },
       ),
     );
   }
@@ -522,16 +724,26 @@ class _WeeklyCleaningScheduleScreenState
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _assignments.remove(assignment);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${assignment.weekLabel} assignment removed'),
-                ),
-              );
+              try {
+                final deleteFuture = ref.read(
+                  deleteCleaningAssignmentProvider((
+                    assignmentId: assignment.id,
+                    dormId: assignment.dormId,
+                  )),
+                );
+                await deleteFuture;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${assignment.weekLabel} assignment removed'),
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error removing assignment: $e')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -564,18 +776,44 @@ class _WeeklyCleaningScheduleScreenState
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _assignments.removeWhere(
-                  (a) =>
-                      a.year == _selectedDate.year &&
-                      a.month == _selectedDate.month,
+              try {
+                final currentUserDorm = ref.read(currentUserDormProvider);
+                final dorm = currentUserDorm.value;
+                if (dorm != null) {
+                  final assignmentsFuture = ref.read(
+                    dormCleaningAssignmentsProvider(dorm.id).future,
+                  );
+
+                  final allAssignments = await assignmentsFuture;
+                  
+                  // Filter assignments for the specific month
+                  final assignments = allAssignments
+                      .where((a) => a.year == _selectedDate.year && a.month == _selectedDate.month)
+                      .toList();
+
+                  // Delete all assignments for this month
+                  final deleteOperations = assignments.map(
+                    (assignment) => ref.read(
+                      deleteCleaningAssignmentProvider((
+                        assignmentId: assignment.id,
+                        dormId: assignment.dormId,
+                      )),
+                    ),
+                  );
+
+                  await Future.wait(deleteOperations);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$monthName assignments cleared')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error clearing assignments: $e')),
                 );
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$monthName assignments cleared')),
-              );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

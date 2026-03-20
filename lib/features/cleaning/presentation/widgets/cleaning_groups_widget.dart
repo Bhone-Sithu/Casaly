@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
+import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../providers/cleaning_providers.dart';
 
 class CleaningGroupsWidget extends ConsumerStatefulWidget {
   const CleaningGroupsWidget({super.key});
@@ -13,45 +15,88 @@ class CleaningGroupsWidget extends ConsumerStatefulWidget {
 }
 
 class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
-  final List<CleaningGroup> _groups = []; // TODO: Replace with provider data
-  final List<DormMember> _availableMembers = [
-    // TODO: Replace with actual dorm members from provider
-    DormMember(
-      id: '1',
-      userId: '1',
-      displayName: 'John Doe',
-      email: 'john@example.com',
-      role: MemberRole.member,
-      joinedAt: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    DormMember(
-      id: '2',
-      userId: '2',
-      displayName: 'Jane Smith',
-      email: 'jane@example.com',
-      role: MemberRole.member,
-      joinedAt: DateTime.now().subtract(const Duration(days: 25)),
-    ),
-    DormMember(
-      id: '3',
-      userId: '3',
-      displayName: 'Mike Johnson',
-      email: 'mike@example.com',
-      role: MemberRole.member,
-      joinedAt: DateTime.now().subtract(const Duration(days: 20)),
-    ),
-    DormMember(
-      id: '4',
-      userId: '4',
-      displayName: 'Sarah Wilson',
-      email: 'sarah@example.com',
-      role: MemberRole.member,
-      joinedAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final currentUserDorm = ref.watch(currentUserDormProvider);
+    
+    return currentUserDorm.when(
+      data: (dorm) {
+        if (dorm == null) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: const Center(
+              child: Text('No dorm found. Please join or create a dorm first.'),
+            ),
+          );
+        }
+        
+        final dormMembersAsync = ref.watch(dormMembersProvider(dorm.id));
+        final cleaningGroupsAsync = ref.watch(dormCleaningGroupsProvider(dorm.id));
+        
+        return dormMembersAsync.when(
+          data: (members) {
+            return cleaningGroupsAsync.when(
+              data: (groups) => _buildContent(context, members, groups, dorm.id),
+              loading: () => Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stack) => Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Center(child: Text('Error loading groups: $error')),
+              ),
+            );
+          },
+          loading: () => Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Center(child: Text('Error loading members: $error')),
+          ),
+        );
+      },
+      loading: () => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Center(child: Text('Error loading dorm: $error')),
+      ),
+    );
+  }
+  
+  Widget _buildContent(BuildContext context, List<DormMember> members, List<CleaningGroup> groups, String dormId) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: const BoxDecoration(
@@ -77,9 +122,9 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMembersSection(),
+                  _buildMembersSection(members, groups),
                   const SizedBox(height: 24),
-                  _buildGroupsSection(),
+                  _buildGroupsSection(members, groups, dormId),
                 ],
               ),
             ),
@@ -89,7 +134,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  Widget _buildMembersSection() {
+  Widget _buildMembersSection(List<DormMember> members, List<CleaningGroup> groups) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -110,8 +155,8 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             ),
           ),
           child: Column(
-            children: _availableMembers
-                .map((member) => _buildMemberTile(member))
+            children: members
+                .map((member) => _buildMemberTile(member, groups))
                 .toList(),
           ),
         ),
@@ -119,7 +164,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  Widget _buildMemberTile(DormMember member) {
+  Widget _buildMemberTile(DormMember member, List<CleaningGroup> groups) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -148,7 +193,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             ),
           ),
           Text(
-            _getMemberGroupInfo(member.id),
+            _getMemberGroupInfo(member.id, groups),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey.shade600,
               fontStyle: FontStyle.italic,
@@ -159,28 +204,28 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  Widget _buildGroupsSection() {
+  Widget _buildGroupsSection(List<DormMember> members, List<CleaningGroup> groups, String dormId) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Groups (${_groups.length})',
+            'Groups (${groups.length})',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          if (_groups.isEmpty)
-            _buildEmptyGroups()
+          if (groups.isEmpty)
+            _buildEmptyGroups(members, dormId)
           else
             Expanded(
               child: ListView.separated(
-                itemCount: _groups.length,
+                itemCount: groups.length,
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
                 itemBuilder: (context, index) =>
-                    _buildGroupCard(_groups[index]),
+                    _buildGroupCard(groups[index], groups, members),
               ),
             ),
         ],
@@ -188,7 +233,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  Widget _buildEmptyGroups() {
+  Widget _buildEmptyGroups(List<DormMember> members, String dormId) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -211,7 +256,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
-            onPressed: () => _showCreateGroupDialog(),
+            onPressed: () => _showCreateGroupDialog(members, dormId),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Create First Group'),
             style: ElevatedButton.styleFrom(
@@ -227,7 +272,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  Widget _buildGroupCard(CleaningGroup group) {
+  Widget _buildGroupCard(CleaningGroup group, List<CleaningGroup> groups, List<DormMember> members) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -309,8 +354,8 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  String _getMemberGroupInfo(String memberId) {
-    final memberGroups = _groups
+  String _getMemberGroupInfo(String memberId, List<CleaningGroup> groups) {
+    final memberGroups = groups
         .where((group) => group.hasMember(memberId))
         .toList();
     if (memberGroups.isEmpty) {
@@ -322,15 +367,30 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     }
   }
 
-  void _showCreateGroupDialog() {
+  void _showCreateGroupDialog(List<DormMember> members, String dormId) {
     showDialog(
       context: context,
       builder: (context) => _GroupCreationDialog(
-        availableMembers: _availableMembers,
-        onGroupCreated: (group) {
-          setState(() {
-            _groups.add(group);
-          });
+        availableMembers: members,
+        dormId: dormId,
+        onGroupCreated: (group) async {
+          print('WIDGET_DEBUG: onGroupCreated called for group: ${group.name}');
+          print('WIDGET_DEBUG: Group details - dormId: ${group.dormId}, members: ${group.memberIds}');
+          try {
+            print('WIDGET_DEBUG: About to call createCleaningGroupProvider');
+            final createFuture = ref.read(createCleaningGroupProvider(group));
+            print('WIDGET_DEBUG: Provider called, awaiting result');
+            await createFuture;
+            print('WIDGET_DEBUG: Group creation completed successfully');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Group created successfully!')),
+            );
+          } catch (e) {
+            print('WIDGET_DEBUG: Error in group creation: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error creating group: $e')),
+            );
+          }
         },
       ),
     );
@@ -366,14 +426,22 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              setState(() {
-                _groups.remove(group);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Group "${group.name}" deleted')),
-              );
+              try {
+                final deleteFuture = ref.read(deleteCleaningGroupProvider((
+                  groupId: group.id,
+                  dormId: group.dormId,
+                )));
+                await deleteFuture;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Group "${group.name}" deleted')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error deleting group: $e')),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -390,10 +458,12 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
 class _GroupCreationDialog extends StatefulWidget {
   final List<DormMember> availableMembers;
   final Function(CleaningGroup) onGroupCreated;
+  final String dormId;
 
   const _GroupCreationDialog({
     required this.availableMembers,
     required this.onGroupCreated,
+    required this.dormId,
   });
 
   @override
@@ -501,7 +571,7 @@ class _GroupCreationDialogState extends State<_GroupCreationDialog> {
               ? () {
                   final group = CleaningGroup(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    dormId: 'dorm1', // TODO: Get from provider
+                    dormId: widget.dormId,
                     name: _nameController.text.trim(),
                     description: _descriptionController.text.trim().isNotEmpty
                         ? _descriptionController.text.trim()

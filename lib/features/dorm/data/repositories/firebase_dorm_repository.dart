@@ -391,13 +391,35 @@ class FirebaseDormRepository implements IDormRepository {
 
   @override
   Stream<List<DormMember>> watchDormMembers(String dormId) {
+    print('DORM_MEMBERS_DEBUG: Starting to watch dorm members for dormId: $dormId');
+    print('DORM_MEMBERS_DEBUG: Collection path: ${FirestorePaths.dormMembers(dormId)}');
+    
     return _firestore
         .collection(FirestorePaths.dormMembers(dormId))
         .orderBy('joinedAt')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => DormMemberModel.fromFirestore(doc).toEntity())
-            .toList());
+        .map((snapshot) {
+          print('DORM_MEMBERS_DEBUG: Snapshot received with ${snapshot.docs.length} documents');
+          if (snapshot.docs.isEmpty) {
+            print('DORM_MEMBERS_DEBUG: No members found in collection');
+          } else {
+            print('DORM_MEMBERS_DEBUG: Member docs: ${snapshot.docs.map((doc) => doc.id).toList()}');
+          }
+          
+          try {
+            final members = snapshot.docs
+                .map((doc) => DormMemberModel.fromFirestore(doc).toEntity())
+                .toList();
+            print('DORM_MEMBERS_DEBUG: Successfully parsed ${members.length} members');
+            return members;
+          } catch (e) {
+            print('DORM_MEMBERS_DEBUG: Error parsing members: $e');
+            rethrow;
+          }
+        })
+        .handleError((error) {
+          print('DORM_MEMBERS_DEBUG: Stream error: $error');
+        });
   }
 
   Future<String> _generateUniqueInviteCode() async {

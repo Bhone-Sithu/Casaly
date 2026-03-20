@@ -3,79 +3,114 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
+import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../providers/cleaning_providers.dart';
 
 class WeeklyAssignmentDialog extends ConsumerStatefulWidget {
   final int weekNumber;
   final int year;
   final int month;
-  final Function(CleaningAssignment) onAssignmentCreated;
 
   const WeeklyAssignmentDialog({
     super.key,
     required this.weekNumber,
     required this.year,
     required this.month,
-    required this.onAssignmentCreated,
   });
 
   @override
-  ConsumerState<WeeklyAssignmentDialog> createState() => _WeeklyAssignmentDialogState();
+  ConsumerState<WeeklyAssignmentDialog> createState() =>
+      _WeeklyAssignmentDialogState();
 }
 
-class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog> {
+class _WeeklyAssignmentDialogState
+    extends ConsumerState<WeeklyAssignmentDialog> {
   AssignmentType _assignmentType = AssignmentType.individual;
   String? _selectedGroupId;
   Set<String> _selectedMemberIds = {};
   final _notesController = TextEditingController();
 
-  // Mock data - TODO: Replace with provider data
-  final List<CleaningGroup> _availableGroups = [];
-  final List<DormMember> _availableMembers = [];
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize with mock data - TODO: Replace with provider data
-    _availableMembers.addAll([
-      DormMember(
-        id: '1', 
-        userId: '1', 
-        displayName: 'John Doe', 
-        email: 'john@example.com',
-        role: MemberRole.member,
-        joinedAt: DateTime.now().subtract(const Duration(days: 30))
-      ),
-      DormMember(
-        id: '2', 
-        userId: '2', 
-        displayName: 'Jane Smith', 
-        email: 'jane@example.com',
-        role: MemberRole.member,
-        joinedAt: DateTime.now().subtract(const Duration(days: 25))
-      ),
-      DormMember(
-        id: '3', 
-        userId: '3', 
-        displayName: 'Mike Johnson', 
-        email: 'mike@example.com',
-        role: MemberRole.member,
-        joinedAt: DateTime.now().subtract(const Duration(days: 20))
-      ),
-      DormMember(
-        id: '4', 
-        userId: '4', 
-        displayName: 'Sarah Wilson', 
-        email: 'sarah@example.com',
-        role: MemberRole.member,
-        joinedAt: DateTime.now().subtract(const Duration(days: 15))
-      ),
-    ]);
-  }
+  String? _currentDormId;
 
   @override
   Widget build(BuildContext context) {
     final weekRange = _getWeekDateRange();
-    
+    final currentUserDorm = ref.watch(currentUserDormProvider);
+
+    return currentUserDorm.when(
+      data: (dorm) {
+        if (dorm == null) {
+          return const AlertDialog(
+            title: Text('Error'),
+            content: Text('No dorm found. Please join or create a dorm first.'),
+          );
+        }
+
+        _currentDormId = dorm.id;
+        print('ASSIGNMENT_DIALOG_DEBUG: Set dorm ID to: $_currentDormId');
+        final dormMembersAsync = ref.watch(dormMembersProvider(dorm.id));
+
+        final cleaningGroupsAsync = ref.watch(
+          dormCleaningGroupsProvider(dorm.id),
+        );
+        return dormMembersAsync.when(
+          data: (members) {
+            return cleaningGroupsAsync.when(
+              data: (groups) =>
+                  _buildDialog(context, weekRange, members, groups),
+              loading: () => Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stack) => Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Center(child: Text('Error loading groups: $error')),
+              ),
+            );
+          },
+          loading: () => Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Center(child: Text('Error loading members: $error')),
+          ),
+        );
+      },
+      loading: () => const AlertDialog(
+        title: Text('Loading...'),
+        content: CircularProgressIndicator(),
+      ),
+      error: (error, stack) => AlertDialog(
+        title: const Text('Error'),
+        content: Text('Failed to load dorm: $error'),
+      ),
+    );
+  }
+
+  Widget _buildDialog(
+    BuildContext context,
+    String weekRange,
+    List<DormMember> members,
+    List<CleaningGroup> groups,
+  ) {
     return Dialog(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
@@ -91,9 +126,9 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
               padding: const EdgeInsets.all(20),
               child: Text(
                 'Assign Week ${widget.weekNumber} (${widget.month}/${widget.year})',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
             // Content
@@ -104,77 +139,78 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.date_range,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Date Range: $weekRange',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.date_range,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Date Range: $weekRange',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Assignment Type',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SegmentedButton<AssignmentType>(
-              segments: const [
-                ButtonSegment<AssignmentType>(
-                  value: AssignmentType.individual,
-                  label: Text('Individual'),
-                  icon: Icon(Icons.person, size: 16),
-                ),
-                ButtonSegment<AssignmentType>(
-                  value: AssignmentType.group,
-                  label: Text('Group'),
-                  icon: Icon(Icons.group, size: 16),
-                ),
-              ],
-              selected: {_assignmentType},
-              onSelectionChanged: (Set<AssignmentType> selection) {
-                setState(() {
-                  _assignmentType = selection.first;
-                  _selectedGroupId = null;
-                  _selectedMemberIds.clear();
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            if (_assignmentType == AssignmentType.individual) 
-              _buildIndividualAssignment()
-            else 
-              _buildGroupAssignment(),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes (Optional)',
-                hintText: 'e.g., Focus on kitchen and living room',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Assignment Type',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SegmentedButton<AssignmentType>(
+                      segments: const [
+                        ButtonSegment<AssignmentType>(
+                          value: AssignmentType.individual,
+                          label: Text('Individual'),
+                          icon: Icon(Icons.person, size: 16),
+                        ),
+                        ButtonSegment<AssignmentType>(
+                          value: AssignmentType.group,
+                          label: Text('Group'),
+                          icon: Icon(Icons.group, size: 16),
+                        ),
+                      ],
+                      selected: {_assignmentType},
+                      onSelectionChanged: (Set<AssignmentType> selection) {
+                        setState(() {
+                          _assignmentType = selection.first;
+                          _selectedGroupId = null;
+                          _selectedMemberIds.clear();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    if (_assignmentType == AssignmentType.individual)
+                      _buildIndividualAssignment(members)
+                    else
+                      _buildGroupAssignment(groups),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes (Optional)',
+                        hintText: 'e.g., Focus on kitchen and living room',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
                   ],
                 ),
               ),
@@ -191,7 +227,9 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
-                    onPressed: _canCreateAssignment() ? _createAssignment : null,
+                    onPressed: _canCreateAssignment()
+                        ? _createAssignment
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
@@ -207,15 +245,15 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
     );
   }
 
-  Widget _buildIndividualAssignment() {
+  Widget _buildIndividualAssignment(List<DormMember> members) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Select Members',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Container(
@@ -226,15 +264,17 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
           ),
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: _availableMembers.length,
+            itemCount: members.length,
             itemBuilder: (context, index) {
-              final member = _availableMembers[index];
+              final member = members[index];
               return CheckboxListTile(
                 title: Row(
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.2),
                       child: Text(
                         member.initials,
                         style: TextStyle(
@@ -292,7 +332,9 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
                     spacing: 6,
                     runSpacing: 4,
                     children: _selectedMemberIds.map((memberId) {
-                      final member = _availableMembers.firstWhere((m) => m.id == memberId);
+                      final member = members.firstWhere(
+                        (m) => m.id == memberId,
+                      );
                       return Chip(
                         label: Text(
                           member.displayName,
@@ -319,21 +361,21 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
     );
   }
 
-  Widget _buildGroupAssignment() {
+  Widget _buildGroupAssignment(List<CleaningGroup> groups) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Select Group',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        if (_availableGroups.isEmpty)
+        if (groups.isEmpty)
           _buildNoGroupsWidget()
         else
-          _buildGroupSelection(),
+          _buildGroupSelection(groups),
       ],
     );
   }
@@ -348,24 +390,22 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.group_outlined,
-            size: 32,
-            color: Colors.grey.shade600,
-          ),
+          Icon(Icons.group_outlined, size: 32, color: Colors.grey.shade600),
           const SizedBox(height: 8),
           Text(
             'No groups created yet',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Create groups first using the Groups button')),
+                const SnackBar(
+                  content: Text('Create groups first using the Groups button'),
+                ),
               );
             },
             icon: const Icon(Icons.add, size: 16),
@@ -380,7 +420,7 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
     );
   }
 
-  Widget _buildGroupSelection() {
+  Widget _buildGroupSelection(List<CleaningGroup> groups) {
     return Container(
       constraints: const BoxConstraints(maxHeight: 200),
       decoration: BoxDecoration(
@@ -389,9 +429,9 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
       ),
       child: ListView.builder(
         shrinkWrap: true,
-        itemCount: _availableGroups.length,
+        itemCount: groups.length,
         itemBuilder: (context, index) {
-          final group = _availableGroups[index];
+          final group = groups[index];
           return RadioListTile<String>(
             title: Row(
               children: [
@@ -406,10 +446,7 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
                     ),
                   ),
                 Expanded(
-                  child: Text(
-                    group.name,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text(group.name, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
@@ -430,14 +467,21 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
   String _getWeekDateRange() {
     final firstDayOfMonth = DateTime(widget.year, widget.month, 1);
     final firstWeekday = firstDayOfMonth.weekday;
-    
+
     final weekStartDay = ((widget.weekNumber - 1) * 7) - firstWeekday + 2;
-    final weekStart = DateTime(widget.year, widget.month, weekStartDay > 0 ? weekStartDay : 1);
-    
+    final weekStart = DateTime(
+      widget.year,
+      widget.month,
+      weekStartDay > 0 ? weekStartDay : 1,
+    );
+
     final lastDayOfMonth = DateTime(widget.year, widget.month + 1, 0).day;
     final weekEndDay = weekStartDay + 6;
-    final weekEnd = DateTime(widget.year, widget.month, 
-      weekEndDay <= lastDayOfMonth ? weekEndDay : lastDayOfMonth);
+    final weekEnd = DateTime(
+      widget.year,
+      widget.month,
+      weekEndDay <= lastDayOfMonth ? weekEndDay : lastDayOfMonth,
+    );
 
     return '${weekStart.day} - ${weekEnd.day}';
   }
@@ -450,31 +494,67 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
     }
   }
 
-  void _createAssignment() {
+  void _createAssignment() async {
     final assignment = CleaningAssignment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      dormId: 'dorm1', // TODO: Get from provider
+      dormId: _currentDormId ?? '',
       weekNumber: widget.weekNumber,
       year: widget.year,
       month: widget.month,
-      assignedGroupId: _assignmentType == AssignmentType.group ? _selectedGroupId : null,
-      assignedMemberIds: _assignmentType == AssignmentType.individual 
-          ? _selectedMemberIds.toList() 
+      assignedGroupId: _assignmentType == AssignmentType.group
+          ? _selectedGroupId
           : null,
-      notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+      assignedMemberIds: _assignmentType == AssignmentType.individual
+          ? _selectedMemberIds.toList()
+          : null,
+      notes: _notesController.text.trim().isNotEmpty
+          ? _notesController.text.trim()
+          : null,
       createdAt: DateTime.now(),
     );
 
-    widget.onAssignmentCreated(assignment);
+    print(
+      'ASSIGNMENT_DIALOG_DEBUG: Creating assignment for week ${widget.weekNumber}',
+    );
+    print(
+      'ASSIGNMENT_DIALOG_DEBUG: Assignment details - dormId: ${assignment.dormId}, type: $_assignmentType',
+    );
+    print(
+      'ASSIGNMENT_DIALOG_DEBUG: Selected group: $_selectedGroupId, selected members: $_selectedMemberIds',
+    );
+
     Navigator.pop(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Week ${widget.weekNumber} assigned successfully',
+    try {
+      print(
+        'ASSIGNMENT_DIALOG_DEBUG: About to call createCleaningAssignmentProvider',
+      );
+      final createFuture = ref.read(
+        createCleaningAssignmentProvider(assignment),
+      );
+      print('ASSIGNMENT_DIALOG_DEBUG: Provider called, awaiting result');
+      await createFuture;
+      print(
+        'ASSIGNMENT_DIALOG_DEBUG: Assignment creation completed successfully',
+      );
+      
+      // Invalidate providers to ensure UI updates immediately
+      if (_currentDormId != null) {
+        ref.invalidate(dormCleaningAssignmentsProvider(_currentDormId!));
+        print('ASSIGNMENT_DIALOG_DEBUG: Invalidated assignments provider for dorm: $_currentDormId');
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Week ${widget.weekNumber} assigned successfully'),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      print('ASSIGNMENT_DIALOG_DEBUG: Error in assignment creation: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating assignment: $e')));
+    }
   }
 
   @override
@@ -484,7 +564,4 @@ class _WeeklyAssignmentDialogState extends ConsumerState<WeeklyAssignmentDialog>
   }
 }
 
-enum AssignmentType {
-  individual,
-  group,
-}
+enum AssignmentType { individual, group }

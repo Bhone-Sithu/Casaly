@@ -97,4 +97,29 @@ class CleaningAssignmentModel extends CleaningAssignment {
       createdAt: createdAt,
     );
   }
+
+  @override
+  CleaningAssignmentModel copyWith({
+    String? id,
+    String? dormId,
+    int? weekNumber,
+    int? year,
+    int? month,
+    String? assignedGroupId,
+    List<String>? assignedMemberIds,
+    String? notes,
+    DateTime? createdAt,
+  }) {
+    return CleaningAssignmentModel(
+      id: id ?? this.id,
+      dormId: dormId ?? this.dormId,
+      weekNumber: weekNumber ?? this.weekNumber,
+      year: year ?? this.year,
+      month: month ?? this.month,
+      assignedGroupId: assignedGroupId ?? this.assignedGroupId,
+      assignedMemberIds: assignedMemberIds ?? this.assignedMemberIds,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/cleaning_task.dart';
 import '../../domain/entities/cleaning_schedule.dart';
+import '../../domain/entities/cleaning_assignment.dart';
+import '../../domain/entities/cleaning_group.dart';
 import '../../domain/repositories/i_cleaning_repository.dart';
 import '../../data/repositories/firebase_cleaning_repository.dart';
 
@@ -9,135 +11,157 @@ final cleaningRepositoryProvider = Provider<ICleaningRepository>((ref) {
   return FirebaseCleaningRepository();
 });
 
-// Cleaning schedules for a dorm
-final dormCleaningSchedulesProvider = StreamProvider.family<List<CleaningSchedule>, String>((ref, dormId) {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  return repository.watchDormCleaningSchedules(dormId);
-});
+// Cleaning Assignments (Weekly) Providers
+// Simple non-streaming provider that loads once and doesn't cause rebuilds
+final dormCleaningAssignmentsProvider =
+    FutureProvider.family<List<CleaningAssignment>, String>((
+      ref,
+      dormId,
+    ) async {
+      print('PROVIDER_DEBUG: Loading ALL assignments for dormId=$dormId');
+      final repository = ref.watch(cleaningRepositoryProvider);
 
-// Cleaning tasks for a dorm  
-final dormCleaningTasksProvider = StreamProvider.family<List<CleaningTask>, String>((ref, dormId) {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  return repository.watchDormCleaningTasks(dormId);
-});
-
-// User's cleaning tasks
-final userCleaningTasksProvider = StreamProvider.family<List<CleaningTask>, String>((ref, userId) {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  return repository.watchUserCleaningTasks(userId);
-});
-
-// Create cleaning task
-final createCleaningTaskProvider = FutureProvider.family<CleaningTask, CleaningTask>((ref, task) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.createCleaningTask(task);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (task) => task,
-  );
-});
-
-// Update cleaning task
-final updateCleaningTaskProvider = FutureProvider.family<CleaningTask, CleaningTask>((ref, task) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.updateCleaningTask(task);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (task) => task,
-  );
-});
-
-// Mark task completed
-final markTaskCompletedProvider = FutureProvider.family<CleaningTask, (String, String)>((ref, params) async {
-  final (taskId, userId) = params;
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.markTaskCompleted(taskId, userId);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (task) => task,
-  );
-});
-
-// Mark task incomplete
-final markTaskIncompleteProvider = FutureProvider.family<CleaningTask, String>((ref, taskId) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.markTaskIncomplete(taskId);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (task) => task,
-  );
-});
-
-// Get today's tasks for user
-final todaysTasksProvider = FutureProvider.family<List<CleaningTask>, String>((ref, userId) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.getTodaysTasksForUser(userId);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (tasks) => tasks,
-  );
-});
-
-// Get overdue tasks for user
-final overdueTasksProvider = FutureProvider.family<List<CleaningTask>, String>((ref, userId) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.getOverdueTasksForUser(userId);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (tasks) => tasks,
-  );
-});
-
-// Create cleaning schedule
-final createCleaningScheduleProvider = FutureProvider.family<CleaningSchedule, CleaningSchedule>((ref, schedule) async {
-  final repository = ref.watch(cleaningRepositoryProvider);
-  final result = await repository.createCleaningSchedule(schedule);
-  
-  return result.fold(
-    (failure) => throw Exception(failure.message),
-    (schedule) => schedule,
-  );
-});
-
-// Task summary for dashboard
-class TaskSummary {
-  final int totalTasks;
-  final int completedTasks;
-  final int overdueTasks;
-  final int todaysTasks;
-
-  TaskSummary({
-    required this.totalTasks,
-    required this.completedTasks,
-    required this.overdueTasks,
-    required this.todaysTasks,
-  });
-}
-
-final taskSummaryProvider = Provider.family<AsyncValue<TaskSummary>, String>((ref, userId) {
-  final userTasksAsync = ref.watch(userCleaningTasksProvider(userId));
-  
-  return userTasksAsync.when(
-    data: (tasks) {
-      final totalTasks = tasks.length;
-      final completedTasks = tasks.where((t) => t.isCompleted).length;
-      final overdueTasks = tasks.where((t) => t.isOverdue).length;
-      final todaysTasks = tasks.where((t) => t.isDueToday).length;
+      // Just fetch all assignments for current month to start
+      final now = DateTime.now();
+      print('PROVIDER_DEBUG: Current date is $now, fetching for ${now.year}/${now.month}');
       
-      return AsyncValue.data(TaskSummary(
-        totalTasks: totalTasks,
-        completedTasks: completedTasks,
-        overdueTasks: overdueTasks,
-        todaysTasks: todaysTasks,
-      ));
-    },
-    loading: () => const AsyncValue.loading(),
-    error: (error, stackTrace) => AsyncValue.error(error, stackTrace),
-  );
-});
+      final result = await repository.getAssignmentsForMonth(
+        dormId,
+        now.year,
+        now.month,
+      );
+      
+      return result.fold(
+        (failure) {
+          print('PROVIDER_DEBUG: Failed to get assignments: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (assignments) {
+          print('PROVIDER_DEBUG: Successfully loaded ${assignments.length} assignments');
+          return assignments;
+        },
+      );
+    });
+
+final createCleaningAssignmentProvider =
+    Provider.family<Future<CleaningAssignment>, CleaningAssignment>((
+      ref,
+      assignment,
+    ) async {
+      print(
+        'PROVIDER_DEBUG: createCleaningAssignmentProvider called for Week ${assignment.weekNumber}',
+      );
+      final repository = ref.watch(cleaningRepositoryProvider);
+      print(
+        'PROVIDER_DEBUG: Repository obtained, calling createCleaningAssignment',
+      );
+      final result = await repository.createCleaningAssignment(assignment);
+      print('PROVIDER_DEBUG: Repository call completed');
+
+      return result.fold(
+        (failure) {
+          print(
+            'PROVIDER_DEBUG: Assignment creation failed: ${failure.message}',
+          );
+          throw Exception(failure.message);
+        },
+        (assignment) {
+          print(
+            'PROVIDER_DEBUG: Assignment creation successful: ${assignment.id}',
+          );
+          return assignment;
+        },
+      );
+    });
+
+final updateCleaningAssignmentProvider =
+    FutureProvider.family<CleaningAssignment, CleaningAssignment>((
+      ref,
+      assignment,
+    ) async {
+      final repository = ref.watch(cleaningRepositoryProvider);
+      final result = await repository.updateCleaningAssignment(assignment);
+
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (assignment) => assignment,
+      );
+    });
+
+final deleteCleaningAssignmentProvider =
+    Provider.family<Future<void>, ({String assignmentId, String dormId})>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.watch(cleaningRepositoryProvider);
+      final result = await repository.deleteCleaningAssignment(
+        params.assignmentId,
+        params.dormId,
+      );
+
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) => null,
+      );
+    });
+
+// Cleaning Groups Providers
+final dormCleaningGroupsProvider =
+    FutureProvider.family<List<CleaningGroup>, String>((ref, dormId) async {
+      final repository = ref.watch(cleaningRepositoryProvider);
+      final result = await repository.getDormCleaningGroups(dormId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (groups) => groups,
+      );
+    });
+
+final createCleaningGroupProvider =
+    Provider.family<Future<CleaningGroup>, CleaningGroup>((ref, group) async {
+      print(
+        'PROVIDER_DEBUG: createCleaningGroupProvider called for group: ${group.name}',
+      );
+      final repository = ref.watch(cleaningRepositoryProvider);
+      print('PROVIDER_DEBUG: Repository obtained, calling createCleaningGroup');
+      final result = await repository.createCleaningGroup(group);
+      print('PROVIDER_DEBUG: Repository call completed');
+
+      return result.fold(
+        (failure) {
+          print('PROVIDER_DEBUG: Group creation failed: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (group) {
+          print('PROVIDER_DEBUG: Group creation successful: ${group.id}');
+          return group;
+        },
+      );
+    });
+
+final updateCleaningGroupProvider =
+    FutureProvider.family<CleaningGroup, CleaningGroup>((ref, group) async {
+      final repository = ref.watch(cleaningRepositoryProvider);
+      final result = await repository.updateCleaningGroup(group);
+
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (group) => group,
+      );
+    });
+
+final deleteCleaningGroupProvider =
+    Provider.family<Future<void>, ({String groupId, String dormId})>((
+      ref,
+      params,
+    ) async {
+      final repository = ref.watch(cleaningRepositoryProvider);
+      final result = await repository.deleteCleaningGroup(
+        params.groupId,
+        params.dormId,
+      );
+
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) => null,
+      );
+    });
