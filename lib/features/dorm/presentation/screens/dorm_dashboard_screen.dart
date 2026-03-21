@@ -357,7 +357,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                     ),
                     child: const Icon(
                       Icons.local_laundry_service,
-                      color: AppColors.cyan600,
+                      color: AppColors.orange600,
                       size: 24,
                     ),
                   ),
@@ -370,13 +370,13 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                           'Laundry Management',
                           style: AppTypography.bodyLg.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: AppColors.cyan800,
+                            color: AppColors.orange800,
                           ),
                         ),
                         Text(
                           'Check who is using the laundry',
                           style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.cyan600,
+                            color: AppColors.orange600,
                           ),
                         ),
                       ],
@@ -384,7 +384,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                   ),
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: AppColors.primary,
+                    color: AppColors.orange400,
                     size: 16,
                   ),
                 ],

@@ -356,7 +356,7 @@ class _GlassMachineCardState extends ConsumerState<GlassMachineCard>
 
   Widget _buildUserNameStatus(int displayMinutes) {
     final membersAsync = ref.watch(dormMembersProvider(widget.dormId));
-    
+
     return membersAsync.when(
       data: (members) {
         final user = members.firstWhere(
@@ -370,7 +370,7 @@ class _GlassMachineCardState extends ConsumerState<GlassMachineCard>
             joinedAt: DateTime.now(),
           ),
         );
-        
+
         return Text(
           '${user.displayName} is using - ${_formatTime(displayMinutes)} left',
           style: AppTypography.labelSm.copyWith(
