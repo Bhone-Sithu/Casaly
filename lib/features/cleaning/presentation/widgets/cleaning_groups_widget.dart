@@ -430,7 +430,16 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     ).then((result) {
       // If dialog returned true (success), trigger UI rebuild
       if (result == true) {
-        _triggerRebuild();
+        // Try multiple refresh strategies
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            _triggerRebuild();
+            // Also try to invalidate all related providers
+            ref.invalidate(currentUserDormProvider);
+            ref.invalidate(dormMembersProvider);
+            ref.invalidate(dormCleaningGroupsProvider);
+          }
+        });
       }
     });
   }
@@ -483,7 +492,77 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
     );
   }
 
-  void _showDeleteGroupDialog(CleaningGroup group) {
+  Future<void> _showDeleteGroupDialog(CleaningGroup group) async {
+    // First check if group has assignments
+    final currentUserDorm = ref.read(currentUserDormProvider);
+    final dorm = currentUserDorm.value;
+    if (dorm == null) return;
+
+    try {
+      final assignmentsFuture = ref.read(
+        dormCleaningAssignmentsForMonthProvider((
+          dormId: dorm.id,
+          year: DateTime.now().year,
+          month: DateTime.now().month,
+        )).future,
+      );
+      final assignments = await assignmentsFuture;
+      final groupAssignments = assignments
+          .where((a) => a.assignedGroupId == group.id)
+          .toList();
+
+      if (groupAssignments.isNotEmpty) {
+        _showDeleteAssignedGroupDialog(group, groupAssignments.length);
+      } else {
+        _showSimpleDeleteDialog(group);
+      }
+    } catch (e) {
+      // If we can't check assignments, show simple dialog
+      _showSimpleDeleteDialog(group);
+    }
+  }
+
+  void _showDeleteAssignedGroupDialog(CleaningGroup group, int assignmentCount) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Assigned Group'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('The group "${group.name}" has $assignmentCount assignment${assignmentCount == 1 ? '' : 's'} in the schedule.'),
+            const SizedBox(height: 12),
+            const Text(
+              'Deleting this group will also remove all its assignments from the schedule.',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'This action cannot be undone.',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => _deleteGroupWithAssignments(group),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Group & Assignments'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSimpleDeleteDialog(CleaningGroup group) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -495,28 +574,7 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                final deleteFuture = ref.read(deleteCleaningGroupProvider((
-                  groupId: group.id,
-                  dormId: group.dormId,
-                )));
-                await deleteFuture;
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Group "${group.name}" deleted')),
-                );
-                
-                // Trigger UI rebuild
-                _triggerRebuild();
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error deleting group: $e')),
-                );
-              }
-            },
+            onPressed: () => _deleteGroupOnly(group),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
@@ -526,6 +584,93 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
         ],
       ),
     );
+  }
+
+  Future<void> _deleteGroupOnly(CleaningGroup group) async {
+    Navigator.pop(context);
+    try {
+      final deleteFuture = ref.read(deleteCleaningGroupProvider((
+        groupId: group.id,
+        dormId: group.dormId,
+      )));
+      await deleteFuture;
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Group "${group.name}" deleted')),
+      );
+      
+      // Trigger UI rebuild
+      _triggerRebuild();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting group: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteGroupWithAssignments(CleaningGroup group) async {
+    Navigator.pop(context);
+    
+    final currentUserDorm = ref.read(currentUserDormProvider);
+    final dorm = currentUserDorm.value;
+    if (dorm == null) return;
+
+    try {
+      // First get all assignments for this group
+      final assignmentsFuture = ref.read(
+        dormCleaningAssignmentsForMonthProvider((
+          dormId: dorm.id,
+          year: DateTime.now().year,
+          month: DateTime.now().month,
+        )).future,
+      );
+      final assignments = await assignmentsFuture;
+      final groupAssignments = assignments
+          .where((a) => a.assignedGroupId == group.id)
+          .toList();
+
+      // Delete all assignments first
+      for (final assignment in groupAssignments) {
+        try {
+          final deleteAssignmentFuture = ref.read(deleteCleaningAssignmentProvider((
+            assignmentId: assignment.id,
+            dormId: dorm.id,
+          )));
+          await deleteAssignmentFuture;
+        } catch (e) {
+          // Continue even if some assignments fail to delete
+          print('Failed to delete assignment ${assignment.id}: $e');
+        }
+      }
+
+      // Then delete the group
+      final deleteFuture = ref.read(deleteCleaningGroupProvider((
+        groupId: group.id,
+        dormId: group.dormId,
+      )));
+      await deleteFuture;
+      
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Group "${group.name}" and ${groupAssignments.length} assignments deleted'),
+        ),
+      );
+      
+      // Trigger UI rebuild
+      _triggerRebuild();
+      
+      // Also refresh assignment providers
+      ref.invalidate(dormCleaningAssignmentsProvider);
+      ref.invalidate(dormCleaningAssignmentsForMonthProvider);
+      
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting group: $e')),
+      );
+    }
   }
 }
 

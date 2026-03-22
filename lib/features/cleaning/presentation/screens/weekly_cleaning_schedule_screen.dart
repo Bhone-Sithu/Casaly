@@ -755,6 +755,21 @@ class _WeeklyCleaningScheduleScreenState
             final dorm = currentUserDorm.value;
             if (dorm != null) {
               ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));
+              // Use the assignment's own year/month to ensure correct provider is invalidated
+              ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+                dormId: dorm.id,
+                year: updatedAssignment.year,
+                month: updatedAssignment.month,
+              )));
+              // Also invalidate the currently selected month if different
+              if (updatedAssignment.year != _selectedDate.year || 
+                  updatedAssignment.month != _selectedDate.month) {
+                ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+                  dormId: dorm.id,
+                  year: _selectedDate.year,
+                  month: _selectedDate.month,
+                )));
+              }
             }
           } catch (e) {
             if (!context.mounted) return;
@@ -800,6 +815,21 @@ class _WeeklyCleaningScheduleScreenState
                 final dorm = currentUserDorm.value;
                 if (dorm != null) {
                   ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));
+                  // Use the assignment's own year/month to ensure correct provider is invalidated
+                  ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+                    dormId: dorm.id,
+                    year: assignment.year,
+                    month: assignment.month,
+                  )));
+                  // Also invalidate the currently selected month if different
+                  if (assignment.year != _selectedDate.year || 
+                      assignment.month != _selectedDate.month) {
+                    ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+                      dormId: dorm.id,
+                      year: _selectedDate.year,
+                      month: _selectedDate.month,
+                    )));
+                  }
                 }
               } catch (e) {
                 if (!context.mounted) return;
@@ -984,19 +1014,14 @@ class _WeeklyCleaningScheduleScreenState
                 final dorm = currentUserDorm.value;
                 if (dorm != null) {
                   final assignmentsFuture = ref.read(
-                    dormCleaningAssignmentsProvider(dorm.id).future,
+                    dormCleaningAssignmentsForMonthProvider((
+                      dormId: dorm.id,
+                      year: _selectedDate.year,
+                      month: _selectedDate.month,
+                    )).future,
                   );
 
-                  final allAssignments = await assignmentsFuture;
-
-                  // Filter assignments for the specific month
-                  final assignments = allAssignments
-                      .where(
-                        (a) =>
-                            a.year == _selectedDate.year &&
-                            a.month == _selectedDate.month,
-                      )
-                      .toList();
+                  final assignments = await assignmentsFuture;
 
                   // Delete all assignments for this month
                   final deleteOperations = assignments.map(
@@ -1009,6 +1034,14 @@ class _WeeklyCleaningScheduleScreenState
                   );
 
                   await Future.wait(deleteOperations);
+
+                  // Invalidate providers to refresh UI
+                  ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));
+                  ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+                    dormId: dorm.id,
+                    year: _selectedDate.year,
+                    month: _selectedDate.month,
+                  )));
 
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(

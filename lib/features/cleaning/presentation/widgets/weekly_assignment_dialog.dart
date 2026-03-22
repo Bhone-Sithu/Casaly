@@ -524,6 +524,11 @@ class _WeeklyAssignmentDialogState
       // Invalidate providers to ensure UI updates immediately
       if (_currentDormId != null) {
         ref.invalidate(dormCleaningAssignmentsProvider(_currentDormId!));
+        ref.invalidate(dormCleaningAssignmentsForMonthProvider((
+          dormId: _currentDormId!,
+          year: widget.year,
+          month: widget.month,
+        )));
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -653,7 +658,12 @@ class _EditAssignmentDialogState extends ConsumerState<EditAssignmentDialog> {
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                              Text(group.name),
+                              Expanded(
+                                child: Text(
+                                  group.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ],
                           ),
                           subtitle: Text('${group.memberIds.length} members'),
