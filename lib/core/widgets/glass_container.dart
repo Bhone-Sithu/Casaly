@@ -32,11 +32,11 @@ class GlassContainer extends StatelessWidget {
     this.margin,
     this.width,
     this.height,
-    this.blurIntensity = 15.0,
-    this.opacity = 0.15,
-    this.borderRadius = AppRadius.lg,
+    this.blurIntensity = 20.0,  // Stronger blur for editorial effect
+    this.opacity = 0.1,         // Much lower opacity for "no background" effect
+    this.borderRadius = AppRadius.glassCard,
     this.hasBorder = true,
-    this.hasShadow = true,
+    this.hasShadow = false,      // Use tonal layering instead of shadows
     super.key,
   });
 
@@ -109,8 +109,8 @@ class GlassContainer extends StatelessWidget {
   }
 
   Color _getBorderColor() {
-    final baseColor = _getBaseColor();
-    return baseColor.withOpacity(0.3);
+    // Editorial "Ghost Border" - felt, not seen
+    return AppColors.outlineVariant.withValues(alpha: 0.2);
   }
 
   Color _getShadowColor() {
@@ -118,26 +118,17 @@ class GlassContainer extends StatelessWidget {
   }
 
   LinearGradient _getGradient() {
-    final baseColor = _getBaseColor();
+    // "NO BACKGROUND COLOR" glass morphism - pure transparency with subtle borders
     return LinearGradient(
-      begin: Alignment.bottomLeft,
-      end: Alignment.topRight,
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
       colors: [
-        baseColor.withOpacity(
-          opacity * 0.8,
-        ), // Very subtle color at bottom-left
-        Colors.transparent, // Transparent starts early
-        Colors.transparent, // Transparent continues
-        Colors.transparent, // Most of the card is transparent
-        baseColor.withOpacity(opacity * 0.6), // Very subtle color at top-right
+        Colors.white.withValues(alpha: 0.05), // Extremely subtle white highlight
+        Colors.transparent,                    // Complete transparency in center
+        Colors.transparent,                    // Keep transparency
+        Colors.white.withValues(alpha: 0.02), // Barely visible white lowlight
       ],
-      stops: const [
-        0.0,
-        0.15,
-        0.5,
-        0.85,
-        1.0,
-      ], // Color only in first 15% and last 15%
+      stops: const [0.0, 0.3, 0.7, 1.0],
     );
   }
 }

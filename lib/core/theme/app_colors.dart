@@ -2,70 +2,87 @@
 import 'package:flutter/material.dart';
 
 abstract class AppColors {
-  // === PRIMARY — Cyan ===
-  // Fresh, modern, calming blue-green
-  // Use for: brand, primary actions, hero cards, nav active, main UI elements
-  static const cyan50  = Color(0xFFEAFEFF);
-  static const cyan100 = Color(0xFFB2F5FF);
-  static const cyan200 = Color(0xFF7DEDFF);
-  static const cyan400 = Color(0xFF22D3EE);  // ← Primary brand color
-  static const cyan600 = Color(0xFF0891B2);
-  static const cyan800 = Color(0xFF155E75);
+  // === THE BOTANICAL ARCHIVIST PALETTE ===
+  // Editorial-inspired design system with warm paper surfaces
+  
+  // === PRIMARY — Deep Forest Green ===
+  static const primary = Color(0xFF245030);  // Deep forest green for brand and primary actions
+  static const primaryContainer = Color(0xFFBDEFC3);  // Light green container
+  static const primaryFixed = Color(0xFFBDEFC3);  // Success states, "completed" chips
+  static const primaryFixedDim = Color(0xFFA2D2A8);  // Dimmed success state
+  static const onPrimary = Color(0xFFFFFFFF);  // White text on primary
+  static const onPrimaryContainer = Color(0xFF234F30);  // Dark green text on light green
+  static const onPrimaryFixed = Color(0xFF234F30);  // Main heading text
+  static const onPrimaryFixedVariant = Color(0xFF234F30);  // Primary text color
 
-  // === SEMANTIC — Garden Green ===
-  // Fresh leaves, summer grass, life growing
-  // Use for: success states, completed tasks, positive feedback
-  static const green50  = Color(0xFFEAF5E4);
-  static const green100 = Color(0xFFB8DCA4);
-  static const green200 = Color(0xFF8BBC78);
-  static const green400 = Color(0xFF4A9E60);
-  static const green600 = Color(0xFF3A7A44);
-  static const green800 = Color(0xFF245030);
+  // === SECONDARY — Sunset Orange ===
+  static const secondary = Color(0xFFE8884A);  // Warm orange for active/urgent states
+  static const secondaryContainer = Color(0xFFFFDBC9);  // Light orange container
+  static const secondaryFixed = Color(0xFFFFDBC9);  // Task chips background
+  static const secondaryFixedDim = Color(0xFF96490D);  // Active house tasks
+  static const onSecondary = Color(0xFFFFFFFF);  // White text on orange
+  static const onSecondaryContainer = Color(0xFF96490D);  // Dark orange text
 
-  // === SEMANTIC — Sunset Orange ===
-  // Golden hour warmth, urgency without stress
-  // Use for: timers, alerts, washer status, warm accents, info states
-  static const orange50  = Color(0xFFFFF0E0);
-  static const orange100 = Color(0xFFFCCFA0);
-  static const orange200 = Color(0xFFF0A060);
-  static const orange400 = Color(0xFFE8884A);
-  static const orange600 = Color(0xFFC06830);
-  static const orange800 = Color(0xFF8A4820);
+  // === TERTIARY — Deep Berry ===
+  static const tertiary = Color(0xFFD04848);  // Alert red for high-priority warnings
+  static const tertiaryContainer = Color(0xFFFFDADA);  // Light red container
+  static const onTertiary = Color(0xFFFFFFFF);  // White text on red
+  static const onTertiaryContainer = Color(0xFF69000D);  // Very dark red for alerts
 
-  // === SEMANTIC — Sunflower ===
-  // Cheerful, optimistic, summer fields
-  // Use for: warning states, caution alerts, pending tasks
-  static const yellow50  = Color(0xFFFEF8E0);
-  static const yellow100 = Color(0xFFF5E08A);
-  static const yellow200 = Color(0xFFF2C24E);
-  static const yellow400 = Color(0xFFD4A420);
-  static const yellow600 = Color(0xFFA08420);
-  static const yellow800 = Color(0xFF6A5810);
+  // === SURFACE HIERARCHY — The "Warm Paper" System ===
+  // Base Layer
+  static const surface = Color(0xFFFFF8F4);  // Warm paper base of the app
+  
+  // Sectioning Layers (No-Line Rule - use these for boundaries)
+  static const surfaceContainerLowest = Color(0xFFFFFFFF);  // Pure white for highlighted cards
+  static const surfaceContainerLow = Color(0xFFF9F2EE);  // Large structural blocks
+  static const surfaceContainer = Color(0xFFF3EDE9);  // Mid-level grouping
+  static const surfaceContainerHigh = Color(0xFFEEE7E3);  // Input fields, close elements
+  static const surfaceContainerHighest = Color(0xFFE8E1DD);  // Most interactive elements
 
-  // === SEMANTIC — Warm Berry ===
-  // Strawberry warmth, excitement without aggression
-  // Use for: error states, destructive actions, critical alerts
-  static const berry50  = Color(0xFFFDEAEA);
-  static const berry100 = Color(0xFFF0AAAA);
-  static const berry200 = Color(0xFFE87070);
-  static const berry400 = Color(0xFFD04848);
-  static const berry600 = Color(0xFFA03434);
-  static const berry800 = Color(0xFF6A2020);
+  // Surface Text Colors
+  static const onSurface = Color(0xFF1D1B19);  // Main text on surfaces
+  static const onSurfaceVariant = Color(0xFF4F4539);  // Secondary text
+  static const outline = Color(0xFF80736A);  // Subtle outlines
+  static const outlineVariant = Color(0xFFC1C9BF);  // Ghost borders at 20% opacity
 
-  // === NEUTRALS — Warm Cream ===
-  // Every surface has a warm tint. No cold grays anywhere.
-  static const cream50  = Color(0xFFFFFAF0);  // ← Page background
-  static const cream100 = Color(0xFFFFF3E0);  // ← Card highlight bg
-  static const cream200 = Color(0xFFEDE0CC);  // ← Borders
-  static const cream300 = Color(0xFFD0C4B0);  // ← Light borders
-  static const cream400 = Color(0xFFA09080);  // ← Placeholder text
-  static const cream600 = Color(0xFF5A4E42);  // ← Secondary text
-  static const cream800 = Color(0xFF302820);  // ← Primary text
+  // === SEMANTIC MAPPINGS ===
+  static const success = primaryFixed;  // Completed tasks, "all clear" status
+  static const warning = secondaryFixed;  // Attention needed
+  static const error = tertiary;  // High-priority warnings
+  static const info = secondary;  // General information
 
-  // === SEMANTIC (mapped from above) ===
-  static const primary = cyan400;    // ← Main brand color
-  static const success = green400;   // ← Success states
-  static const warning = yellow400;  // ← Warning states
-  static const error   = berry400;   // ← Error states
-  static const info    = orange400;  // ← Info states
+  // === LEGACY SUPPORT (for gradual migration) ===
+  // Primary/Green colors
+  static const green400 = primary;
+  static const green50 = primaryContainer;
+  static const green200 = primaryFixedDim;
+  static const green600 = onPrimaryContainer;
+  static const green800 = onPrimaryFixedVariant;
+  
+  // Secondary/Orange colors
+  static const orange400 = secondary;
+  static const orange50 = secondaryContainer;
+  static const orange100 = secondaryFixed;
+  static const orange200 = Color(0xFFFFB085); // Intermediate orange
+  static const orange600 = onSecondaryContainer;
+  static const orange800 = onSecondaryContainer;
+  
+  // Berry colors
+  static const berry400 = tertiary;
+  static const berry600 = onTertiaryContainer;
+  
+  // Cyan colors (migrate to secondary/primary)
+  static const cyan400 = secondary;
+  static const cyan600 = onSecondaryContainer;
+  static const cyan800 = onPrimaryContainer;
+  
+  // Cream/Surface colors
+  static const cream50 = surface;
+  static const cream100 = surfaceContainerLow;
+  static const cream200 = outlineVariant;
+  static const cream300 = Color(0xFFD0C4B0); // Light borders
+  static const cream400 = outline;
+  static const cream600 = onSurfaceVariant;
+  static const cream800 = onSurface;
 }

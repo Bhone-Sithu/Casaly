@@ -10,6 +10,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/casaly_button.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/top_navigation_bar.dart';
+import '../../../../core/widgets/greeting_section.dart';
+import '../../../cleaning/presentation/widgets/week_cleaning_card.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../cleaning/presentation/screens/weekly_cleaning_schedule_screen.dart';
 import '../../../cleaning/domain/entities/cleaning_assignment.dart';
@@ -18,6 +21,7 @@ import '../../../laundry/presentation/screens/laundry_dashboard_screen.dart';
 import '../../../laundry/presentation/providers/laundry_providers.dart';
 import '../../../laundry/presentation/widgets/compact_machine_card.dart';
 import '../../domain/entities/dorm.dart';
+import '../../domain/entities/dorm_member.dart';
 import '../providers/dorm_providers.dart';
 
 class DormDashboardScreen extends ConsumerWidget {
@@ -237,265 +241,311 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   List<CleaningAssignment> _allAssignments = [];
+  final ScrollController _scrollController = ScrollController();
+  bool _isScrolled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final isScrolled = _scrollController.offset > 10;
+    if (_isScrolled != isScrolled) {
+      setState(() {
+        _isScrolled = isScrolled;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authStateChangesProvider);
+    final currentUser = authState.value;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          widget.dorm.name,
-          style: AppTypography.h2.copyWith(color: AppColors.primary),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
+      backgroundColor: AppColors.surface,
+      appBar: TopNavigationBar(
+        userDisplayName:
+            currentUser?.displayName ?? currentUser?.email ?? 'User',
+        userProfileImageUrl:
+            null, // Firebase User photoURL might not be available
+        onNotificationTap: () {
+          // TODO: Navigate to notifications
+        },
+        onAvatarTap: () {
+          // TODO: Navigate to profile
+        },
+        notificationCount: 0, // TODO: Get actual notification count
+        isScrolled: _isScrolled,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.screenPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: AppSpacing.lg),
-
-            // Current week cleaning assignment
-            _buildCurrentWeekAssignment(),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            // Laundry machines in use
-            _buildLaundryInUse(widget.dorm.id),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // Calendar
-            _buildCalendar(),
-
-            const SizedBox(height: AppSpacing.xxxl),
-
-            // Quick actions
-            Text(
-              'Quick Actions',
-              style: AppTypography.h3.copyWith(color: AppColors.primary),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            GlassCard(
-              type: GlassType.primary,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const WeeklyCleaningScheduleScreen(),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.cleaning_services,
-                      color: AppColors.cyan600,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Cleaning Schedule',
-                          style: AppTypography.bodyLg.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.cyan800,
-                          ),
-                        ),
-                        Text(
-                          'Who is responsible to clean?',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.cyan600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                ],
+        controller: _scrollController,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Greeting Section
+              GreetingSection(
+                userDisplayName:
+                    currentUser?.displayName ?? currentUser?.email ?? 'User',
+                bodyText: _getPersonalizedMessage(),
               ),
-            ),
 
-            const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.cardSeparation),
 
-            GlassCard(
-              type: GlassType.primary,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        LaundryDashboardScreen(dorm: widget.dorm),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.local_laundry_service,
-                      color: AppColors.orange600,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Laundry Management',
-                          style: AppTypography.bodyLg.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.orange800,
-                          ),
-                        ),
-                        Text(
-                          'Check who is using the laundry',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.orange600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.orange400,
-                    size: 16,
-                  ),
-                ],
+              // Current week cleaning assignment
+              _buildCurrentWeekCleaningCard(),
+
+              const SizedBox(height: AppSpacing.cardSeparation),
+
+              // Laundry machines in use
+              _buildLaundryInUse(widget.dorm.id),
+
+              const SizedBox(height: AppSpacing.xxl),
+
+              // Calendar
+              _buildCalendar(),
+
+              const SizedBox(height: AppSpacing.lg),
+
+              // Quick actions
+              Text(
+                'Quick Actions',
+                style: AppTypography.h3.copyWith(color: AppColors.primary),
               ),
-            ),
 
-            const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
 
-            GlassCard(
-              type: GlassType.primary,
-              onTap: () {
-                // TODO: Navigate to member management
-              },
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+              GlassCard(
+                type: GlassType.primary,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const WeeklyCleaningScheduleScreen(),
                     ),
-                    child: const Icon(
-                      Icons.people,
-                      color: AppColors.cyan600,
-                      size: 24,
+                  );
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.cleaning_services,
+                        color: AppColors.cyan600,
+                        size: 24,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dorm Members',
-                          style: AppTypography.bodyLg.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.cyan800,
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cleaning Schedule',
+                            style: AppTypography.bodyLg.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.cyan800,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Manage members',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.cyan600,
+                          Text(
+                            'Who is responsible to clean?',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.cyan600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                ],
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.md),
 
-            GlassCard(
-              type: GlassType.primary,
-              onTap: () {
-                // TODO: Navigate to cleaning schedule
-              },
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+              GlassCard(
+                type: GlassType.primary,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          LaundryDashboardScreen(dorm: widget.dorm),
                     ),
-                    child: const Icon(
-                      Icons.cleaning_services,
-                      color: AppColors.cyan600,
-                      size: 24,
+                  );
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.local_laundry_service,
+                        color: AppColors.orange600,
+                        size: 24,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dorm Information',
-                          style: AppTypography.bodyLg.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.cyan800,
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Laundry Management',
+                            style: AppTypography.bodyLg.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.orange800,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Manage Details about your Dorm',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: AppColors.cyan600,
+                          Text(
+                            'Check who is using the laundry',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.orange600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                ],
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.orange400,
+                      size: 16,
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Bottom padding for floating nav bar
-            const SizedBox(height: 100),
-          ],
+              const SizedBox(height: AppSpacing.md),
+
+              GlassCard(
+                type: GlassType.primary,
+                onTap: () {
+                  // TODO: Navigate to member management
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.people,
+                        color: AppColors.cyan600,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dorm Members',
+                            style: AppTypography.bodyLg.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.cyan800,
+                            ),
+                          ),
+                          Text(
+                            'Manage members',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.cyan600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.md),
+
+              GlassCard(
+                type: GlassType.primary,
+                onTap: () {
+                  // TODO: Navigate to cleaning schedule
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.cleaning_services,
+                        color: AppColors.cyan600,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dorm Information',
+                            style: AppTypography.bodyLg.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.cyan800,
+                            ),
+                          ),
+                          Text(
+                            'Manage Details about your Dorm',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.cyan600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom padding for floating nav bar
+              const SizedBox(height: 100),
+            ],
+          ),
         ),
       ),
     );
@@ -541,6 +591,492 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  String _getPersonalizedMessage() {
+    final messages = [
+      'The house is feeling especially cozy today. Hope you\'re settling in well!',
+      'Your shared space is looking wonderful. Living together makes everything brighter.',
+      'Home is where good friends gather. Thanks for making this place special.',
+      'There\'s something magical about shared meals and shared memories.',
+      'The best part of any day is coming home to good company.',
+      'Creating a warm home together, one day at a time.',
+      'Living with friends makes even ordinary moments feel extraordinary.',
+      'Your presence makes this house feel like a true home.',
+      'Together, we\'re building something beautiful here.',
+      'Home is not a place, it\'s the people who make you feel welcome.',
+      'The laughter echoing through these halls makes everything worthwhile.',
+      'Sharing life\'s simple pleasures makes them twice as sweet.',
+    ];
+
+    // Use a seed based on the current date so message changes daily but is consistent throughout the day
+    final seed = DateTime.now().day + DateTime.now().month * 31;
+    final selectedMessage = messages[seed % messages.length];
+
+    return selectedMessage;
+  }
+
+  Widget _buildLiveUpdateCard() {
+    final machinesAsync = ref.watch(
+      dormLaundryMachinesProvider(widget.dorm.id),
+    );
+
+    return machinesAsync.when(
+      data: (machines) {
+        final machinesInUse = machines
+            .where((machine) => machine.isInUse)
+            .toList();
+
+        if (machinesInUse.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final machine = machinesInUse.first;
+        final remainingMinutes = machine.remainingMinutes ?? 0;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.cardPadding),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              border: Border.all(
+                color: AppColors.outlineVariant.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Live Update badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Text(
+                    'LIVE UPDATE',
+                    style: AppTypography.labelSm.copyWith(
+                      color: AppColors.onSecondaryContainer,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                Text(
+                  'The ${machine.name.toLowerCase()} has $remainingMinutes minutes left.',
+                  style: AppTypography.headlineSm.copyWith(
+                    color: AppColors.onSurface,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.sm),
+
+                Text(
+                  'Cycles remaining: Spin & Dry',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                // Circular progress indicator
+                Center(
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: Stack(
+                      children: [
+                        CircularProgressIndicator(
+                          value:
+                              remainingMinutes / 60.0, // Assuming 60 min cycles
+                          strokeWidth: 6,
+                          backgroundColor: AppColors.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.secondary,
+                          ),
+                        ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                remainingMinutes.toString().padLeft(2, '0'),
+                                style: AppTypography.headlineSm.copyWith(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'MINS',
+                                style: AppTypography.labelSm.copyWith(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildCurrentWeekCleaningCard() {
+    final currentWeek = CleaningAssignment.getWeekOfMonth(DateTime.now());
+    final assignmentsAsync = ref.watch(
+      dormCleaningAssignmentsProvider(widget.dorm.id),
+    );
+
+    return assignmentsAsync.when(
+      data: (assignments) {
+        final now = DateTime.now();
+        final currentAssignment = assignments
+            .where(
+              (a) =>
+                  a.year == now.year &&
+                  a.month == now.month &&
+                  a.weekNumber == currentWeek,
+            )
+            .firstOrNull;
+
+        if (currentAssignment == null) {
+          return _buildWeekCleaningCardWithResolvedNextGroup(
+            assignment: null,
+            groupMembers: [],
+            groupName: 'No Assignment',
+            daysUntilNext: 0,
+            assignments: assignments,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WeeklyCleaningScheduleScreen(),
+                ),
+              );
+            },
+          );
+        }
+
+        // Get group info and members if assigned to a group
+        if (currentAssignment.assignedGroupId != null) {
+          final groupsAsync = ref.watch(
+            dormCleaningGroupsProvider(widget.dorm.id),
+          );
+          return groupsAsync.when(
+            data: (groups) {
+              final group = groups
+                  .where((g) => g.id == currentAssignment.assignedGroupId)
+                  .firstOrNull;
+
+              if (group == null) {
+                return _buildWeekCleaningCardWithResolvedNextGroup(
+                  assignment: currentAssignment,
+                  groupMembers: [],
+                  groupName: 'Unknown Group',
+                  daysUntilNext: _calculateDaysUntilNext(),
+                  assignments: assignments,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const WeeklyCleaningScheduleScreen(),
+                      ),
+                    );
+                  },
+                );
+              }
+
+              // Get members of this group
+              final membersAsync = ref.watch(
+                dormMembersProvider(widget.dorm.id),
+              );
+              return membersAsync.when(
+                data: (allMembers) {
+                  final groupMembers = allMembers
+                      .where((m) => group.memberIds.contains(m.id))
+                      .toList();
+
+                  return _buildWeekCleaningCardWithResolvedNextGroup(
+                    assignment: currentAssignment,
+                    groupMembers: groupMembers,
+                    groupName: group.name,
+                    daysUntilNext: _calculateDaysUntilNext(),
+                    assignments: assignments,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const WeeklyCleaningScheduleScreen(),
+                        ),
+                      );
+                    },
+                  );
+                },
+                loading: () => WeekCleaningCard(
+                  assignment: currentAssignment,
+                  groupMembers: [],
+                  groupName: group.name,
+                  daysUntilNext: _calculateDaysUntilNext(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const WeeklyCleaningScheduleScreen(),
+                      ),
+                    );
+                  },
+                ),
+                error: (_, __) => WeekCleaningCard(
+                  assignment: currentAssignment,
+                  groupMembers: [],
+                  groupName: group.name,
+                  daysUntilNext: _calculateDaysUntilNext(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const WeeklyCleaningScheduleScreen(),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => WeekCleaningCard(
+              assignment: currentAssignment,
+              groupMembers: [],
+              groupName: 'Loading...',
+              daysUntilNext: _calculateDaysUntilNext(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+            ),
+            error: (_, __) => WeekCleaningCard(
+              assignment: currentAssignment,
+              groupMembers: [],
+              groupName: 'Error Loading Group',
+              daysUntilNext: _calculateDaysUntilNext(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+            ),
+          );
+        } else {
+          // Individual assignment
+          final membersAsync = ref.watch(dormMembersProvider(widget.dorm.id));
+          return membersAsync.when(
+            data: (allMembers) {
+              final memberIds = currentAssignment.assignedMemberIds ?? [];
+              final assignedMembers = allMembers
+                  .where((m) => memberIds.contains(m.id))
+                  .toList();
+
+              return _buildWeekCleaningCardWithResolvedNextGroup(
+                assignment: currentAssignment,
+                groupMembers: assignedMembers,
+                groupName: assignedMembers.isNotEmpty
+                    ? assignedMembers.map((m) => m.displayName).join(', ')
+                    : 'Individual Assignment',
+                daysUntilNext: _calculateDaysUntilNext(),
+                assignments: assignments,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const WeeklyCleaningScheduleScreen(),
+                    ),
+                  );
+                },
+              );
+            },
+            loading: () => WeekCleaningCard(
+              assignment: currentAssignment,
+              groupMembers: [],
+              groupName: 'Loading...',
+              daysUntilNext: _calculateDaysUntilNext(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+            ),
+            error: (_, __) => WeekCleaningCard(
+              assignment: currentAssignment,
+              groupMembers: [],
+              groupName: 'Error Loading Members',
+              daysUntilNext: _calculateDaysUntilNext(),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+      },
+      loading: () => WeekCleaningCard(
+        assignment: null,
+        groupMembers: [],
+        groupName: 'Loading...',
+        daysUntilNext: 0,
+        nextGroupName: null, // Can't resolve next group when assignments are loading
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const WeeklyCleaningScheduleScreen(),
+            ),
+          );
+        },
+      ),
+      error: (_, __) => WeekCleaningCard(
+        assignment: null,
+        groupMembers: [],
+        groupName: 'Error Loading Schedule',
+        daysUntilNext: 0,
+        nextGroupName: null, // Can't resolve next group when there's an error
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const WeeklyCleaningScheduleScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  int _calculateDaysUntilNext() {
+    final now = DateTime.now();
+    final currentWeek = CleaningAssignment.getWeekOfMonth(now);
+
+    // Calculate start of next week (assuming weeks start on Monday)
+    final daysUntilMonday = (DateTime.monday - now.weekday) % 7;
+    final nextMondayThisWeek = now.add(Duration(days: daysUntilMonday));
+
+    // If we're already past this week's start, go to next week
+    final nextWeekStart =
+        currentWeek == CleaningAssignment.getWeekOfMonth(nextMondayThisWeek)
+        ? nextMondayThisWeek.add(const Duration(days: 7))
+        : nextMondayThisWeek;
+
+    return nextWeekStart.difference(now).inDays.clamp(0, 7);
+  }
+
+  String? _getNextGroupName(List<CleaningAssignment> assignments) {
+    final now = DateTime.now();
+    final currentWeek = CleaningAssignment.getWeekOfMonth(now);
+
+    // Find the next assignment after current week
+    final futureAssignments = assignments.where(
+      (a) => 
+          a.year == now.year &&
+          a.month == now.month &&
+          a.weekNumber > currentWeek,
+    ).toList();
+    
+    // Sort by week number to get the next one
+    futureAssignments.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
+    
+    return futureAssignments.isNotEmpty ? futureAssignments.first.assignedGroupId : null;
+  }
+  
+  Widget _buildWeekCleaningCardWithResolvedNextGroup({
+    required CleaningAssignment? assignment,
+    required List<DormMember> groupMembers,
+    required String groupName,
+    required int daysUntilNext,
+    required List<CleaningAssignment> assignments,
+    required VoidCallback? onTap,
+  }) {
+    final nextGroupId = _getNextGroupName(assignments);
+    
+    if (nextGroupId == null) {
+      return WeekCleaningCard(
+        assignment: assignment,
+        groupMembers: groupMembers,
+        groupName: groupName,
+        daysUntilNext: daysUntilNext,
+        nextGroupName: null,
+        onTap: onTap,
+      );
+    }
+    
+    // Watch groups provider to resolve next group name
+    final groupsAsync = ref.watch(dormCleaningGroupsProvider(widget.dorm.id));
+    return groupsAsync.when(
+      data: (groups) {
+        final nextGroup = groups.where((g) => g.id == nextGroupId).firstOrNull;
+        return WeekCleaningCard(
+          assignment: assignment,
+          groupMembers: groupMembers,
+          groupName: groupName,
+          daysUntilNext: daysUntilNext,
+          nextGroupName: nextGroup?.name,
+          onTap: onTap,
+        );
+      },
+      loading: () => WeekCleaningCard(
+        assignment: assignment,
+        groupMembers: groupMembers,
+        groupName: groupName,
+        daysUntilNext: daysUntilNext,
+        nextGroupName: null, // Loading, can't resolve yet
+        onTap: onTap,
+      ),
+      error: (_, __) => WeekCleaningCard(
+        assignment: assignment,
+        groupMembers: groupMembers,
+        groupName: groupName,
+        daysUntilNext: daysUntilNext,
+        nextGroupName: null, // Error, can't resolve
+        onTap: onTap,
       ),
     );
   }
@@ -700,155 +1236,152 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
 
     return GlassCard(
       type: GlassType.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Calendar',
-              style: AppTypography.bodyLg.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Calendar',
+            style: AppTypography.bodyLg.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
             ),
-            const SizedBox(height: 16),
-            assignmentsAsync.when(
-              data: (assignments) {
-                // Store assignments in local field for calendar methods
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && assignments != _allAssignments) {
-                    setState(() {
-                      _allAssignments = assignments;
-                    });
-                  }
-                });
+          ),
+          const SizedBox(height: 16),
+          assignmentsAsync.when(
+            data: (assignments) {
+              // Store assignments in local field for calendar methods
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && assignments != _allAssignments) {
+                  setState(() {
+                    _allAssignments = assignments;
+                  });
+                }
+              });
 
-                return Consumer(
-                  builder: (context, ref, child) {
-                    final groupsAsync = ref.watch(
-                      dormCleaningGroupsProvider(widget.dorm.id),
-                    );
+              return Consumer(
+                builder: (context, ref, child) {
+                  final groupsAsync = ref.watch(
+                    dormCleaningGroupsProvider(widget.dorm.id),
+                  );
 
-                    return groupsAsync.when(
-                      data: (groups) => TableCalendar<CleaningAssignment>(
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2030, 12, 31),
-                        focusedDay: _focusedDay,
-                        selectedDayPredicate: (day) =>
-                            isSameDay(_selectedDay, day),
-                        calendarFormat: CalendarFormat.month,
-                        startingDayOfWeek: StartingDayOfWeek.monday,
-                        headerStyle: HeaderStyle(
-                          titleCentered: true,
-                          formatButtonVisible: false,
-                          titleTextStyle: AppTypography.h3.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                          leftChevronIcon: Icon(
-                            Icons.chevron_left,
-                            color: AppColors.primary,
-                          ),
-                          rightChevronIcon: Icon(
-                            Icons.chevron_right,
-                            color: AppColors.primary,
-                          ),
+                  return groupsAsync.when(
+                    data: (groups) => TableCalendar<CleaningAssignment>(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
+                      calendarFormat: CalendarFormat.month,
+                      startingDayOfWeek: StartingDayOfWeek.monday,
+                      headerStyle: HeaderStyle(
+                        titleCentered: true,
+                        formatButtonVisible: false,
+                        titleTextStyle: AppTypography.h3.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
                         ),
-                        calendarStyle: CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.7),
-                            shape: BoxShape.circle,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          markersMaxCount: 1,
-                          weekendTextStyle: TextStyle(
-                            color: Colors.grey.shade600,
-                          ),
+                        leftChevronIcon: Icon(
+                          Icons.chevron_left,
+                          color: AppColors.primary,
                         ),
-                        calendarBuilders: CalendarBuilders(
-                          markerBuilder: (context, date, assignments) {
-                            if (assignments.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
+                        rightChevronIcon: Icon(
+                          Icons.chevron_right,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      calendarStyle: CalendarStyle(
+                        todayDecoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        selectedDecoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        markersMaxCount: 1,
+                        weekendTextStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, date, assignments) {
+                          if (assignments.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
 
-                            final assignment = assignments.first;
-                            Color markerColor =
-                                AppColors.primary; // Default color
+                          final assignment = assignments.first;
+                          Color markerColor =
+                              AppColors.primary; // Default color
 
-                            // Find the group color if assigned to a group
-                            if (assignment.assignedGroupId != null) {
-                              final group = groups.firstWhere(
-                                (g) => g.id == assignment.assignedGroupId,
-                                orElse: () => groups.first,
-                              );
-                              if (group.color != null) {
-                                markerColor = Color(
-                                  int.parse(
-                                    '0xFF${group.color!.replaceAll('#', '')}',
-                                  ),
-                                );
-                              }
-                            }
-
-                            return Container(
-                              margin: const EdgeInsets.only(top: 4),
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: markerColor,
-                                shape: BoxShape.circle,
-                              ),
+                          // Find the group color if assigned to a group
+                          if (assignment.assignedGroupId != null) {
+                            final group = groups.firstWhere(
+                              (g) => g.id == assignment.assignedGroupId,
+                              orElse: () => groups.first,
                             );
-                          },
-                        ),
-                        eventLoader: (day) {
-                          return _getAssignmentsForDay(day);
-                        },
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                          });
-                          _showDayAssignment(selectedDay);
-                        },
-                        onPageChanged: (focusedDay) {
-                          setState(() {
-                            _focusedDay = focusedDay;
-                          });
+                            if (group.color != null) {
+                              markerColor = Color(
+                                int.parse(
+                                  '0xFF${group.color!.replaceAll('#', '')}',
+                                ),
+                              );
+                            }
+                          }
+
+                          return Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: markerColor,
+                              shape: BoxShape.circle,
+                            ),
+                          );
                         },
                       ),
-                      loading: () => const SizedBox(
-                        height: 300,
-                        child: Center(child: CircularProgressIndicator()),
+                      eventLoader: (day) {
+                        return _getAssignmentsForDay(day);
+                      },
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                        _showDayAssignment(selectedDay);
+                      },
+                      onPageChanged: (focusedDay) {
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                    ),
+                    loading: () => const SizedBox(
+                      height: 300,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text('Error loading groups: $error'),
                       ),
-                      error: (error, stack) => SizedBox(
-                        height: 200,
-                        child: Center(
-                          child: Text('Error loading groups: $error'),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const SizedBox(
-                height: 400,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, stack) => SizedBox(
-                height: 200,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(child: Text('Error loading calendar: $error')),
-                ),
+                    ),
+                  );
+                },
+              );
+            },
+            loading: () => const SizedBox(
+              height: 400,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => SizedBox(
+              height: 200,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Center(child: Text('Error loading calendar: $error')),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -920,7 +1453,89 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             .toList();
 
         if (machinesInUse.isEmpty) {
-          return const SizedBox.shrink();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Laundry Status',
+                    style: AppTypography.h3.copyWith(
+                      color: AppColors.cream800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            LaundryDashboardScreen(dorm: widget.dorm),
+                      ),
+                    ),
+                    child: Text(
+                      'View All',
+                      style: AppTypography.labelMd.copyWith(
+                        color: AppColors.orange400,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'All machines available',
+                            style: AppTypography.bodyLg.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Perfect time to start your laundry',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
         }
 
         return Column(

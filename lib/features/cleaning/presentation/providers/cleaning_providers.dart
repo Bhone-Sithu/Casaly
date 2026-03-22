@@ -37,6 +37,30 @@ final dormCleaningAssignmentsProvider =
       );
     });
 
+// Provider for assignments for a specific month/year
+final dormCleaningAssignmentsForMonthProvider = FutureProvider.family<
+    List<CleaningAssignment>, ({String dormId, int year, int month})>((
+  ref,
+  params,
+) async {
+  final repository = ref.watch(cleaningRepositoryProvider);
+
+  final result = await repository.getAssignmentsForMonth(
+    params.dormId,
+    params.year,
+    params.month,
+  );
+
+  return result.fold(
+    (failure) {
+      throw Exception(failure.message);
+    },
+    (assignments) {
+      return assignments;
+    },
+  );
+});
+
 final createCleaningAssignmentProvider =
     Provider.family<Future<CleaningAssignment>, CleaningAssignment>((
       ref,

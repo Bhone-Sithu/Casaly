@@ -14,6 +14,24 @@ class CleaningGroupsWidget extends ConsumerStatefulWidget {
 }
 
 class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
+  // Add a simple rebuild trigger
+  int _rebuildTrigger = 0;
+  
+  void _triggerRebuild() {
+    if (mounted) {
+      setState(() {
+        _rebuildTrigger++;
+      });
+      // Also refresh the provider
+      final currentUserDorm = ref.read(currentUserDormProvider);
+      currentUserDorm.whenData((dorm) {
+        if (dorm != null) {
+          ref.refresh(dormCleaningGroupsProvider(dorm.id));
+        }
+      });
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     final currentUserDorm = ref.watch(currentUserDormProvider);
@@ -391,19 +409,30 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
           try {
             final createFuture = ref.read(createCleaningGroupProvider(group));
             await createFuture;
+            if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Group created successfully!')),
             );
             // Invalidate groups provider to refresh UI immediately
-            ref.invalidate(dormCleaningGroupsProvider(dormId));
+            // Small delay to ensure Firebase operation is complete
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (!context.mounted) return;
+            
+            Navigator.of(context).pop(true); // Close dialog and return success
           } catch (e) {
+            if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error creating group: $e')),
             );
           }
         },
       ),
-    );
+    ).then((result) {
+      // If dialog returned true (success), trigger UI rebuild
+      if (result == true) {
+        _triggerRebuild();
+      }
+    });
   }
 
   void _handleGroupAction(CleaningGroup group, String action) {
@@ -433,12 +462,14 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             onGroupUpdated: (updatedGroup) async {
               try {
                 await ref.read(updateCleaningGroupProvider(updatedGroup).future);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Group updated successfully!')),
                 );
-                // Invalidate the groups provider to refresh the UI
-                ref.invalidate(dormCleaningGroupsProvider(dorm.id));
+                // Trigger UI rebuild
+                _triggerRebuild();
               } catch (e) {
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error updating group: $e')),
                 );
@@ -472,10 +503,15 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
                   dormId: group.dormId,
                 )));
                 await deleteFuture;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Group "${group.name}" deleted')),
                 );
+                
+                // Trigger UI rebuild
+                _triggerRebuild();
               } catch (e) {
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error deleting group: $e')),
                 );
@@ -615,7 +651,7 @@ class _GroupCreationDialogState extends State<_GroupCreationDialog> {
                         ? _descriptionController.text.trim()
                         : null,
                     memberIds: _selectedMemberIds.toList(),
-                    color: _selectedColor.value
+                    color: _selectedColor.toARGB32()
                         .toRadixString(16)
                         .substring(2)
                         .toUpperCase(),
@@ -777,7 +813,7 @@ class _GroupEditDialogState extends State<_GroupEditDialog> {
                         ? _descriptionController.text.trim()
                         : null,
                     memberIds: _selectedMemberIds.toList(),
-                    color: _selectedColor.value
+                    color: _selectedColor.toARGB32()
                         .toRadixString(16)
                         .substring(2)
                         .toUpperCase(),

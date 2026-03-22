@@ -122,13 +122,13 @@ class GlassButton extends StatelessWidget {
 
     switch (variant) {
       case GlassButtonVariant.primary:
-        return AppColors.cyan800;
+        return AppColors.onPrimaryContainer;
       case GlassButtonVariant.info:
-        return AppColors.orange800;
+        return AppColors.onSecondaryContainer;
       case GlassButtonVariant.warning:
-        return AppColors.yellow800;
+        return AppColors.onSecondaryContainer;
       case GlassButtonVariant.neutral:
-        return AppColors.cream800;
+        return AppColors.onSurface;
     }
   }
 }

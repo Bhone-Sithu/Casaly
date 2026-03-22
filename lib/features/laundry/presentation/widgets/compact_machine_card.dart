@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -41,6 +42,11 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
       _animationController.repeat();
     }
   }
+  
+  bool get isFinished {
+    final remainingMinutes = widget.machine.remainingMinutes ?? 0;
+    return widget.machine.isInUse && remainingMinutes <= 0;
+  }
 
   @override
   void dispose() {
@@ -62,23 +68,29 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            widget.machine.type == MachineType.washer
-                ? AppColors.cyan400.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.1),
+            isFinished 
+                ? AppColors.error.withOpacity(0.1)
+                : widget.machine.type == MachineType.washer
+                    ? AppColors.cyan400.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
             Colors.white.withOpacity(0.05),
           ],
         ),
         border: Border.all(
-          color: widget.machine.type == MachineType.washer
-              ? AppColors.cyan400.withOpacity(0.2)
-              : Colors.grey.withOpacity(0.2),
+          color: isFinished 
+              ? AppColors.error.withOpacity(0.2)
+              : widget.machine.type == MachineType.washer
+                  ? AppColors.cyan400.withOpacity(0.2)
+                  : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: widget.machine.type == MachineType.washer
-                ? AppColors.cyan400.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.1),
+            color: isFinished 
+                ? AppColors.error.withOpacity(0.1)
+                : widget.machine.type == MachineType.washer
+                    ? AppColors.cyan400.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -107,9 +119,11 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: widget.machine.type == MachineType.washer
-                        ? AppColors.cyan400.withOpacity(0.15)
-                        : Colors.grey.withOpacity(0.15),
+                    color: isFinished 
+                        ? AppColors.error.withOpacity(0.15)
+                        : widget.machine.type == MachineType.washer
+                            ? AppColors.cyan400.withOpacity(0.15)
+                            : Colors.grey.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -138,11 +152,11 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
                       const SizedBox(height: 2),
                       
                       // Status
-                      isExpired 
+                      isFinished 
                         ? Text(
                             'Finished - Collect now',
                             style: AppTypography.labelSm.copyWith(
-                              color: AppColors.berry600,
+                              color: AppColors.error,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -158,7 +172,7 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: isExpired ? AppColors.berry400 : AppColors.orange400,
+                    color: isFinished ? AppColors.error : AppColors.orange400,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -171,7 +185,26 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
   }
 
   Widget _buildAnimatedIcon() {
-    if (widget.machine.type == MachineType.washer) {
+    if (isFinished) {
+      // Show basket icon with bouncing animation for finished status
+      return AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          final bounceValue = 1 + (0.3 * (0.5 + 0.5 * math.sin(_animationController.value * 2 * math.pi)));
+          return Transform.translate(
+            offset: Offset(0, -3 * math.sin(_animationController.value * 2 * math.pi).abs()),
+            child: Transform.scale(
+              scale: bounceValue,
+              child: Icon(
+                Icons.shopping_basket,
+                size: 20,
+                color: AppColors.error,
+              ),
+            ),
+          );
+        },
+      );
+    } else if (widget.machine.type == MachineType.washer) {
       return AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
