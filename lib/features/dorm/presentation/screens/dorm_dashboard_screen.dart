@@ -321,229 +321,10 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
               const SizedBox(height: AppSpacing.lg),
 
               // Quick actions
-              Text(
-                'Quick Actions',
-                style: AppTypography.h3.copyWith(color: AppColors.primary),
-              ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              GlassCard(
-                type: GlassType.primary,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const WeeklyCleaningScheduleScreen(),
-                    ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.cleaning_services,
-                        color: AppColors.cyan600,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Cleaning Schedule',
-                            style: AppTypography.bodyLg.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.cyan800,
-                            ),
-                          ),
-                          Text(
-                            'Who is responsible to clean?',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.cyan600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.primary,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              GlassCard(
-                type: GlassType.primary,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          LaundryDashboardScreen(dorm: widget.dorm),
-                    ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.local_laundry_service,
-                        color: AppColors.orange600,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Laundry Management',
-                            style: AppTypography.bodyLg.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.orange800,
-                            ),
-                          ),
-                          Text(
-                            'Check who is using the laundry',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.orange600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.orange400,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              GlassCard(
-                type: GlassType.primary,
-                onTap: () {
-                  // TODO: Navigate to member management
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.people,
-                        color: AppColors.cyan600,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Dorm Members',
-                            style: AppTypography.bodyLg.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.cyan800,
-                            ),
-                          ),
-                          Text(
-                            'Manage members',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.cyan600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.primary,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              GlassCard(
-                type: GlassType.primary,
-                onTap: () {
-                  // TODO: Navigate to cleaning schedule
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.cleaning_services,
-                        color: AppColors.cyan600,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Dorm Information',
-                            style: AppTypography.bodyLg.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.cyan800,
-                            ),
-                          ),
-                          Text(
-                            'Manage Details about your Dorm',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.cyan600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.primary,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
+              _buildQuickActions(),
 
               // Bottom padding for floating nav bar
-              const SizedBox(height: 100),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -964,7 +745,8 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
         groupMembers: [],
         groupName: 'Loading...',
         daysUntilNext: 0,
-        nextGroupName: null, // Can't resolve next group when assignments are loading
+        nextGroupName:
+            null, // Can't resolve next group when assignments are loading
         onTap: () {
           Navigator.push(
             context,
@@ -1014,19 +796,23 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     final currentWeek = CleaningAssignment.getWeekOfMonth(now);
 
     // Find the next assignment after current week
-    final futureAssignments = assignments.where(
-      (a) => 
-          a.year == now.year &&
-          a.month == now.month &&
-          a.weekNumber > currentWeek,
-    ).toList();
-    
+    final futureAssignments = assignments
+        .where(
+          (a) =>
+              a.year == now.year &&
+              a.month == now.month &&
+              a.weekNumber > currentWeek,
+        )
+        .toList();
+
     // Sort by week number to get the next one
     futureAssignments.sort((a, b) => a.weekNumber.compareTo(b.weekNumber));
-    
-    return futureAssignments.isNotEmpty ? futureAssignments.first.assignedGroupId : null;
+
+    return futureAssignments.isNotEmpty
+        ? futureAssignments.first.assignedGroupId
+        : null;
   }
-  
+
   Widget _buildWeekCleaningCardWithResolvedNextGroup({
     required CleaningAssignment? assignment,
     required List<DormMember> groupMembers,
@@ -1036,7 +822,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     required VoidCallback? onTap,
   }) {
     final nextGroupId = _getNextGroupName(assignments);
-    
+
     if (nextGroupId == null) {
       return WeekCleaningCard(
         assignment: assignment,
@@ -1047,7 +833,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
         onTap: onTap,
       );
     }
-    
+
     // Watch groups provider to resolve next group name
     final groupsAsync = ref.watch(dormCleaningGroupsProvider(widget.dorm.id));
     return groupsAsync.when(
@@ -1229,9 +1015,173 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     );
   }
 
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: AppTypography.h3.copyWith(
+            color: AppColors.cream800,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // Grid layout for quick actions
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio:
+              0.9, // Changed to 0.9 for even more height to prevent overflow
+          mainAxisSpacing: AppSpacing.md,
+          crossAxisSpacing: AppSpacing.md,
+          children: [
+            _buildQuickActionCard(
+              title: 'Cleaning\nSchedule',
+              subtitle: 'Who cleans this week?',
+              icon: Icons.cleaning_services,
+              iconColor: AppColors.green400,
+              backgroundColor: AppColors.green50,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyCleaningScheduleScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildQuickActionCard(
+              title: 'Laundry\nManagement',
+              subtitle: 'Check laundry status',
+              icon: Icons.local_laundry_service,
+              iconColor: AppColors.orange400,
+              backgroundColor: AppColors.orange50,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        LaundryDashboardScreen(dorm: widget.dorm),
+                  ),
+                );
+              },
+            ),
+            _buildQuickActionCard(
+              title: 'Dorm\nMembers',
+              subtitle: 'Manage members',
+              icon: Icons.people,
+              iconColor: AppColors.berry400,
+              backgroundColor: AppColors.tertiaryContainer,
+              onTap: () {
+                // TODO: Navigate to member management
+              },
+            ),
+            _buildQuickActionCard(
+              title: 'Dorm\nInformation',
+              subtitle: 'Manage dorm details',
+              icon: Icons.home,
+              iconColor: AppColors.cyan600,
+              backgroundColor: AppColors.surfaceContainerHigh,
+              onTap: () {
+                // TODO: Navigate to dorm information
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+  }) {
+    return _TapAnimationWidget(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md), // Reduced from lg to md
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: iconColor.withValues(alpha: 0.2), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: iconColor.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // Added to minimize column height
+          children: [
+            // Icon container
+            Container(
+              padding: const EdgeInsets.all(8), // Further reduced from 10 to 8
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ), // Further reduced from 22 to 20
+            ),
+
+            const SizedBox(height: 8), // Fixed spacing instead of AppSpacing.xs
+            // Text content
+            Expanded(
+              // Changed from Flexible to Expanded to fill available space
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.bodyLg.copyWith(
+                      // Changed from bodyMd to bodySm
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.cream800,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10), // Minimal spacing
+                  Text(
+                    subtitle,
+                    style: AppTypography.bodyLg.copyWith(
+                      color: AppColors.cream600,
+                      fontSize: 10, // Further reduced font size
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCalendar() {
     final assignmentsAsync = ref.watch(
-      dormCleaningAssignmentsProvider(widget.dorm.id),
+      dormCleaningAssignmentsForMonthProvider((
+        dormId: widget.dorm.id,
+        year: _focusedDay.year,
+        month: _focusedDay.month,
+      )),
     );
 
     return GlassCard(
@@ -1310,8 +1260,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                           }
 
                           final assignment = assignments.first;
-                          Color markerColor =
-                              AppColors.primary; // Default color
+                          Color markerColor = AppColors.primary;
 
                           // Find the group color if assigned to a group
                           if (assignment.assignedGroupId != null) {
@@ -1329,7 +1278,6 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                           }
 
                           return Container(
-                            margin: const EdgeInsets.only(top: 4),
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
@@ -1370,15 +1318,12 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
               );
             },
             loading: () => const SizedBox(
-              height: 400,
+              height: 300,
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (error, stack) => SizedBox(
               height: 200,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(child: Text('Error loading calendar: $error')),
-              ),
+              child: Center(child: Text('Error loading calendar: $error')),
             ),
           ),
         ],
@@ -1407,36 +1352,20 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${day.day}/${day.month}/${day.year}'),
+        title: Text('Week $weekNumber Assignment'),
         content: assignments.isEmpty
-            ? Text('No cleaning assignment for Week $weekNumber')
+            ? const Text('No assignment for this week')
             : Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Week $weekNumber Assignment:'),
-                  const SizedBox(height: 8),
-                  groupOrIndividual(assignments.first),
-                ],
+                children: assignments.map((assignment) {
+                  return groupOrIndividual(assignment);
+                }).toList(),
               ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
-          if (assignments.isNotEmpty)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const WeeklyCleaningScheduleScreen(),
-                  ),
-                );
-              },
-              child: const Text('View Schedule'),
-            ),
         ],
       ),
     );
@@ -1447,133 +1376,63 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
 
     return machinesAsync.when(
       data: (machines) {
-        // Filter for machines that are currently in use
-        final machinesInUse = machines
-            .where((machine) => machine.isInUse)
-            .toList();
+        final machinesInUse = machines.where((m) => m.isInUse).toList();
 
         if (machinesInUse.isEmpty) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return GlassContainer(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
                 children: [
-                  Text(
-                    'Laundry Status',
-                    style: AppTypography.h3.copyWith(
-                      color: AppColors.cream800,
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.green50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: AppColors.green400,
+                      size: 24,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            LaundryDashboardScreen(dorm: widget.dorm),
-                      ),
-                    ),
-                    child: Text(
-                      'View All',
-                      style: AppTypography.labelMd.copyWith(
-                        color: AppColors.orange400,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'All machines available',
+                          style: AppTypography.bodyLg.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.green400,
+                          ),
+                        ),
+                        Text(
+                          'All laundry machines are free to use',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_circle,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'All machines available',
-                            style: AppTypography.bodyLg.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Perfect time to start your laundry',
-                            style: AppTypography.bodyMd.copyWith(
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           );
         }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Laundry in Use',
-                  style: AppTypography.h3.copyWith(
-                    color: AppColors.cream800,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          LaundryDashboardScreen(dorm: widget.dorm),
-                    ),
-                  ),
-                  child: Text(
-                    'View All',
-                    style: AppTypography.labelMd.copyWith(
-                      color: AppColors.orange400,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              'Laundry In Use',
+              style: AppTypography.h3.copyWith(color: AppColors.primary),
             ),
-
             const SizedBox(height: AppSpacing.md),
-
             SizedBox(
-              height: 80,
+              height: 120,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.zero,
@@ -1591,6 +1450,78 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stack) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _TapAnimationWidget extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _TapAnimationWidget({
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  State<_TapAnimationWidget> createState() => _TapAnimationWidgetState();
+}
+
+class _TapAnimationWidgetState extends State<_TapAnimationWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    _animationController.forward();
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    _animationController.reverse();
+    widget.onTap();
+  }
+
+  void _handleTapCancel() {
+    _animationController.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _handleTapDown,
+      onTapUp: _handleTapUp,
+      onTapCancel: _handleTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: widget.child,
+          );
+        },
+      ),
     );
   }
 }
