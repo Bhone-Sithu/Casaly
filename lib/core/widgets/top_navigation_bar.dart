@@ -25,110 +25,89 @@ class TopNavigationBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: isScrolled ? Colors.transparent : AppColors.surface,
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      toolbarHeight: 50,
-      flexibleSpace: ClipRect(
+    return SizedBox(
+      height: preferredSize.height,
+      child: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: isScrolled ? 10.0 : 0.0,
-            sigmaY: isScrolled ? 10.0 : 0.0,
-          ),
+          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
           child: Container(
-            decoration: BoxDecoration(
-              color: isScrolled 
-                  ? AppColors.surface.withValues(alpha: 0.8)
-                  : AppColors.surface,
-              border: isScrolled 
-                  ? Border(
-                      bottom: BorderSide(
-                        color: AppColors.outlineVariant.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    )
-                  : null,
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
             ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.screenPadding,
-                  vertical: AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    // User Avatar
-                    GestureDetector(
-                      onTap: onAvatarTap,
-                      child: UserAvatar(
-                        displayName: userDisplayName,
-                        profileImageUrl: userProfileImageUrl,
-                        size: 38,
-                        showBorder: true,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenPadding,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  // User Avatar
+                  GestureDetector(
+                    onTap: onAvatarTap,
+                    child: UserAvatar(
+                      displayName: userDisplayName,
+                      profileImageUrl: userProfileImageUrl,
+                      size: 38,
+                      showBorder: true,
+                    ),
+                  ),
+
+                  const SizedBox(width: AppSpacing.lg),
+
+                  // Casaly Logo Text
+                  Expanded(
+                    child: Text(
+                      'Casaly',
+                      style: AppTypography.headlineSm.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                  ),
 
-                    const SizedBox(width: AppSpacing.lg),
-
-                    // Casaly Logo Text
-                    Expanded(
-                      child: Text(
-                        'Casaly',
-                        style: AppTypography.headlineSm.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                  // Notification Button
+                  Stack(
+                    children: [
+                      IconButton(
+                        onPressed: onNotificationTap,
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          color: AppColors.onSurface,
+                          size: 20,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.3),
+                          shape: const CircleBorder(),
                         ),
                       ),
-                    ),
-
-                    // Notification Button
-                    Stack(
-                      children: [
-                        IconButton(
-                          onPressed: onNotificationTap,
-                          icon: Icon(
-                            Icons.notifications_outlined,
-                            color: AppColors.onSurface,
-                            size: 20,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.surfaceContainerHigh,
-                            shape: const CircleBorder(),
-                          ),
-                        ),
-                        if (notificationCount > 0)
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: AppColors.tertiary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.surface,
-                                  width: 2,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  notificationCount > 9
-                                      ? '9+'
-                                      : notificationCount.toString(),
-                                  style: AppTypography.labelSm.copyWith(
-                                    color: AppColors.onTertiary,
-                                    fontSize: 9,
-                                  ),
+                      if (notificationCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: AppColors.tertiary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: Center(
+                              child: Text(
+                                notificationCount > 9
+                                    ? '9+'
+                                    : notificationCount.toString(),
+                                style: AppTypography.labelSm.copyWith(
+                                  color: AppColors.onTertiary,
+                                  fontSize: 9,
                                 ),
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                  ],
-                ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

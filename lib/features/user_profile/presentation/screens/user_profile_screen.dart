@@ -44,18 +44,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final userProfileAsync = ref.watch(currentUserProfileProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cream50,
       appBar: AppBar(
         title: Text(
           'Profile',
-          style: AppTypography.h2.copyWith(
-            color: AppColors.primary,
-          ),
+          style: AppTypography.h2.copyWith(color: AppColors.primary),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: AppColors.primary, size: 28),
+          icon: const Icon(
+            Icons.chevron_left,
+            color: AppColors.primary,
+            size: 28,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -64,9 +66,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
               onPressed: () => setState(() => _isEditing = true),
               child: Text(
                 'Edit',
-                style: AppTypography.labelMd.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: AppTypography.labelMd.copyWith(color: AppColors.primary),
               ),
             ),
         ],
@@ -74,9 +74,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       body: userProfileAsync.when(
         data: (userProfile) {
           if (userProfile == null) {
-            return const Center(
-              child: Text('User profile not found'),
-            );
+            return const Center(child: Text('User profile not found'));
           }
 
           // Initialize controllers when not editing
@@ -109,10 +107,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                 bottom: 0,
                                 right: 0,
                                 child: GestureDetector(
-                                  onTap: _isUploadingImage ? null : _selectProfileImage,
+                                  onTap: _isUploadingImage
+                                      ? null
+                                      : _selectProfileImage,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: _isUploadingImage ? AppColors.cream400 : AppColors.primary,
+                                      color: _isUploadingImage
+                                          ? AppColors.cream400
+                                          : AppColors.primary,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -126,7 +128,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                             height: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
                                             ),
                                           )
                                         : const Icon(
@@ -162,52 +167,52 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   // Form Fields
                   GlassCard(
                     type: GlassType.neutral,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Personal Information',
-                            style: AppTypography.h3.copyWith(
-                              color: AppColors.primary,
-                            ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Personal Information',
+                          style: AppTypography.h3.copyWith(
+                            color: AppColors.primary,
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          
-                          // Display Name Field
-                          CasalyTextField(
-                            controller: _displayNameController,
-                            label: 'Display Name',
-                            hint: 'Enter your display name',
-                            enabled: _isEditing,
-                            validator: (value) {
-                              if (value?.trim().isEmpty ?? true) {
-                                return 'Please enter a display name';
-                              }
-                              return null;
-                            },
-                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
 
-                          const SizedBox(height: AppSpacing.lg),
+                        // Display Name Field
+                        CasalyTextField(
+                          controller: _displayNameController,
+                          label: 'Display Name',
+                          hint: 'Enter your display name',
+                          enabled: _isEditing,
+                          validator: (value) {
+                            if (value?.trim().isEmpty ?? true) {
+                              return 'Please enter a display name';
+                            }
+                            return null;
+                          },
+                        ),
 
-                          // Phone Field
-                          CasalyTextField(
-                            controller: _phoneController,
-                            label: 'Phone Number',
-                            hint: 'Enter your phone number',
-                            keyboardType: TextInputType.phone,
-                            enabled: _isEditing,
-                          ),
+                        const SizedBox(height: AppSpacing.lg),
 
-                          const SizedBox(height: AppSpacing.lg),
+                        // Phone Field
+                        CasalyTextField(
+                          controller: _phoneController,
+                          label: 'Phone Number',
+                          hint: 'Enter your phone number',
+                          keyboardType: TextInputType.phone,
+                          enabled: _isEditing,
+                        ),
 
-                          // Email Field (Read-only)
-                          CasalyTextField(
-                            controller: _emailController,
-                            label: 'Email',
-                            enabled: false,
-                          ),
-                        ],
-                      ),
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Email Field (Read-only)
+                        CasalyTextField(
+                          controller: _emailController,
+                          label: 'Email',
+                          enabled: false,
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
@@ -219,13 +224,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         Expanded(
                           child: CasalyButton(
                             text: 'Cancel',
-                            onPressed: _isLoading ? null : () {
-                              setState(() => _isEditing = false);
-                              // Reset form
-                              _displayNameController.text = userProfile.displayName ?? '';
-                              _phoneController.text = userProfile.phoneNumber ?? '';
-                              _emailController.text = userProfile.email;
-                            },
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    setState(() => _isEditing = false);
+                                    // Reset form
+                                    _displayNameController.text =
+                                        userProfile.displayName ?? '';
+                                    _phoneController.text =
+                                        userProfile.phoneNumber ?? '';
+                                    _emailController.text = userProfile.email;
+                                  },
                             variant: ButtonVariant.outline,
                           ),
                         ),
@@ -242,7 +251,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ] else ...[
                     const SizedBox(height: AppSpacing.xl),
-                    
+
                     // Logout Button
                     CasalyButton(
                       text: 'Sign Out',
@@ -271,18 +280,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             ),
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppColors.error,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: AppColors.error),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 'Error loading profile',
@@ -324,16 +327,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             ),
             Text(
               'Select Profile Photo',
-              style: AppTypography.h3.copyWith(
-                color: AppColors.primary,
-              ),
+              style: AppTypography.h3.copyWith(color: AppColors.primary),
             ),
             const SizedBox(height: AppSpacing.lg),
             Card(
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.camera_alt,
+                      color: AppColors.primary,
+                    ),
                     title: Text('Take Photo', style: AppTypography.bodyLg),
                     onTap: () {
                       Navigator.pop(context);
@@ -342,8 +346,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.photo_library, color: AppColors.primary),
-                    title: Text('Choose from Gallery', style: AppTypography.bodyLg),
+                    leading: const Icon(
+                      Icons.photo_library,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(
+                      'Choose from Gallery',
+                      style: AppTypography.bodyLg,
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _pickImage(ImageSource.gallery);
@@ -383,32 +393,30 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       }
 
       // Upload image
-      final imageUrl = await ref.read(uploadProfileImageProvider(UploadImageParams(
-        uid: user.uid,
-        imagePath: pickedFile.path,
-      )).future);
+      final imageUrl = await ref.read(
+        uploadProfileImageProvider(
+          UploadImageParams(uid: user.uid, imagePath: pickedFile.path),
+        ).future,
+      );
 
       // Update profile with new image URL
       final repository = ref.read(userProfileRepositoryProvider);
       final result = await repository.updateProfileImage(user.uid, imageUrl);
 
-      result.fold(
-        (failure) => throw Exception(failure.message),
-        (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Profile picture updated successfully!'),
-                backgroundColor: AppColors.primary,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
+      result.fold((failure) => throw Exception(failure.message), (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Profile picture updated successfully!'),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-            );
-          }
-        },
-      );
+            ),
+          );
+        }
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -431,11 +439,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(updateUserProfileProvider(UpdateUserProfileParams(
-        uid: ref.read(authStateChangesProvider).asData?.value?.uid ?? '',
-        displayName: _displayNameController.text.trim(),
-        phoneNumber: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-      )).future);
+      await ref.read(
+        updateUserProfileProvider(
+          UpdateUserProfileParams(
+            uid: ref.read(authStateChangesProvider).asData?.value?.uid ?? '',
+            displayName: _displayNameController.text.trim(),
+            phoneNumber: _phoneController.text.trim().isEmpty
+                ? null
+                : _phoneController.text.trim(),
+          ),
+        ).future,
+      );
 
       if (mounted) {
         setState(() {
@@ -457,7 +471,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update profile: $e'),
@@ -507,7 +521,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Account', style: AppTypography.h3.copyWith(color: AppColors.error)),
+        title: Text(
+          'Delete Account',
+          style: AppTypography.h3.copyWith(color: AppColors.error),
+        ),
         content: Text(
           'Are you sure you want to delete your account? This action cannot be undone and will remove all your data.',
           style: AppTypography.bodyMd,

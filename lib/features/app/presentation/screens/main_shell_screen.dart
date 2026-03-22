@@ -25,16 +25,21 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
-      extendBody: true,
-      bottomNavigationBar: GlassBottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+    return Material(
+      color: AppColors.surface,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        extendBody: true,
+        body: IndexedStack(index: _currentIndex, children: _screens),
+        bottomNavigationBar: GlassBottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
       ),
     );
   }
@@ -47,32 +52,36 @@ class _ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Chat', style: TextStyle(color: Color(0xFF4A9E60))),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Color(0xFF4A9E60)),
-            SizedBox(height: 16),
-            Text(
-              'Chat Feature',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4A9E60),
+      backgroundColor: AppColors.surface,
+      body: const SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 64,
+                color: AppColors.primary,
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Coming Soon',
-              style: TextStyle(fontSize: 16, color: Color(0xFF5A4E42)),
-            ),
-          ],
+              SizedBox(height: 16),
+              Text(
+                'Chat Feature',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Coming Soon',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -85,32 +94,32 @@ class _SocialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Social', style: TextStyle(color: Color(0xFF4A9E60))),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.explore_outlined, size: 64, color: Color(0xFF4A9E60)),
-            SizedBox(height: 16),
-            Text(
-              'Social Features',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4A9E60),
+      backgroundColor: AppColors.surface,
+      body: const SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.explore_outlined, size: 64, color: AppColors.primary),
+              SizedBox(height: 16),
+              Text(
+                'Social Features',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Coming Soon',
-              style: TextStyle(fontSize: 16, color: Color(0xFF5A4E42)),
-            ),
-          ],
+              SizedBox(height: 8),
+              Text(
+                'Coming Soon',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

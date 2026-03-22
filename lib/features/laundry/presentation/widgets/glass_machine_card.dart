@@ -455,7 +455,7 @@ class _GlassMachineCardState extends ConsumerState<GlassMachineCard>
                   child: Icon(
                     Icons.water_drop_rounded,
                     size: 32,
-                    color: AppColors.cyan400,
+                    color: Colors.cyan,
                   ),
                 );
               },

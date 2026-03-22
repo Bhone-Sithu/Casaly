@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -273,61 +274,103 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: TopNavigationBar(
-        userDisplayName:
-            currentUser?.displayName ?? currentUser?.email ?? 'User',
-        userProfileImageUrl:
-            null, // Firebase User photoURL might not be available
-        onNotificationTap: () {
-          // TODO: Navigate to notifications
-        },
-        onAvatarTap: () {
-          // TODO: Navigate to profile
-        },
-        notificationCount: 0, // TODO: Get actual notification count
-        isScrolled: _isScrolled,
-      ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.screenPadding,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Greeting Section
-              GreetingSection(
-                userDisplayName:
-                    currentUser?.displayName ?? currentUser?.email ?? 'User',
-                bodyText: _getPersonalizedMessage(),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Main content that scrolls behind the glass nav bar
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.screenPadding,
+                right: AppSpacing.screenPadding,
+                top:
+                    MediaQuery.of(context).padding.top +
+                    80, // Status bar + nav bar
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Greeting Section
+                  GreetingSection(
+                    userDisplayName:
+                        currentUser?.displayName ??
+                        currentUser?.email ??
+                        'User',
+                    bodyText: _getPersonalizedMessage(),
+                  ),
 
-              const SizedBox(height: AppSpacing.cardSeparation),
+                  const SizedBox(height: AppSpacing.cardSeparation),
 
-              // Current week cleaning assignment
-              _buildCurrentWeekCleaningCard(),
+                  // Current week cleaning assignment
+                  _buildCurrentWeekCleaningCard(),
 
-              const SizedBox(height: AppSpacing.cardSeparation),
+                  const SizedBox(height: AppSpacing.cardSeparation),
 
-              // Laundry machines in use
-              _buildLaundryInUse(widget.dorm.id),
+                  // Laundry machines in use
+                  _buildLaundryInUse(widget.dorm.id),
 
-              const SizedBox(height: AppSpacing.xxl),
+                  const SizedBox(height: AppSpacing.xxl),
 
-              // Calendar
-              _buildCalendar(),
+                  // Calendar
+                  _buildCalendar(),
 
-              const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
-              // Quick actions
-              _buildQuickActions(),
-
-              // Bottom padding for floating nav bar
-              const SizedBox(height: 32),
-            ],
+                  // Quick actions
+                  _buildQuickActions(),
+                ],
+              ),
+            ),
           ),
-        ),
+
+          // Glass navigation bar positioned at the top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                child: Container(
+                  height: MediaQuery.of(context).padding.top + 60,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.3),
+                        AppColors.surface.withValues(alpha: 0.85),
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top,
+                    ),
+                    child: TopNavigationBar(
+                      userDisplayName:
+                          currentUser?.displayName ??
+                          currentUser?.email ??
+                          'User',
+                      userProfileImageUrl:
+                          null, // Firebase User photoURL might not be available
+                      onNotificationTap: () {
+                        // TODO: Navigate to notifications
+                      },
+                      onAvatarTap: () {
+                        // TODO: Navigate to profile
+                      },
+                      notificationCount:
+                          0, // TODO: Get actual notification count
+                      isScrolled: _isScrolled,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1432,7 +1475,7 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
             ),
             const SizedBox(height: AppSpacing.md),
             SizedBox(
-              height: 120,
+              height: 80,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.zero,
@@ -1458,10 +1501,7 @@ class _TapAnimationWidget extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
 
-  const _TapAnimationWidget({
-    required this.onTap,
-    required this.child,
-  });
+  const _TapAnimationWidget({required this.onTap, required this.child});
 
   @override
   State<_TapAnimationWidget> createState() => _TapAnimationWidgetState();
@@ -1479,13 +1519,9 @@ class _TapAnimationWidgetState extends State<_TapAnimationWidget>
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override

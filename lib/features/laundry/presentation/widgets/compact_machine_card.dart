@@ -37,12 +37,12 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     if (widget.machine.isInUse) {
       _animationController.repeat();
     }
   }
-  
+
   bool get isFinished {
     final remainingMinutes = widget.machine.remainingMinutes ?? 0;
     return widget.machine.isInUse && remainingMinutes <= 0;
@@ -60,7 +60,7 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
     final isExpired = remainingMinutes <= 0;
 
     return Container(
-      width: 280,
+      width: 200,
       margin: const EdgeInsets.only(right: AppSpacing.md),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSpacing.md),
@@ -68,29 +68,29 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            isFinished 
+            isFinished
                 ? AppColors.error.withOpacity(0.1)
                 : widget.machine.type == MachineType.washer
-                    ? AppColors.cyan400.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                ? AppColors.cyan400.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.1),
             Colors.white.withOpacity(0.05),
           ],
         ),
         border: Border.all(
-          color: isFinished 
+          color: isFinished
               ? AppColors.error.withOpacity(0.2)
               : widget.machine.type == MachineType.washer
-                  ? AppColors.cyan400.withOpacity(0.2)
-                  : Colors.grey.withOpacity(0.2),
+              ? AppColors.cyan400.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isFinished 
+            color: isFinished
                 ? AppColors.error.withOpacity(0.1)
                 : widget.machine.type == MachineType.washer
-                    ? AppColors.cyan400.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                ? AppColors.cyan400.withOpacity(0.1)
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -101,7 +101,10 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -116,61 +119,60 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
               children: [
                 // Machine icon with animation
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: isFinished 
+                    color: isFinished
                         ? AppColors.error.withOpacity(0.15)
                         : widget.machine.type == MachineType.washer
-                            ? AppColors.cyan400.withOpacity(0.15)
-                            : Colors.grey.withOpacity(0.15),
+                        ? AppColors.cyan400.withOpacity(0.15)
+                        : Colors.grey.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: _buildAnimatedIcon(),
-                  ),
+                  child: Center(child: _buildAnimatedIcon()),
                 ),
-                
-                const SizedBox(width: AppSpacing.md),
-                
+
+                const SizedBox(width: AppSpacing.sm),
+
                 // Machine info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Machine name
                       Text(
                         widget.machine.name,
-                        style: AppTypography.labelMd.copyWith(
+                        style: AppTypography.bodyLg.copyWith(
                           color: AppColors.cream800,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      
+
                       const SizedBox(height: 2),
-                      
+
                       // Status
-                      isFinished 
-                        ? Text(
-                            'Finished - Collect now',
-                            style: AppTypography.labelSm.copyWith(
-                              color: AppColors.error,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                        : _buildStatusText(remainingMinutes),
+                      isFinished
+                          ? Text(
+                              'Finished - Collect now',
+                              style: AppTypography.labelSm.copyWith(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : _buildStatusText(remainingMinutes),
                     ],
                   ),
                 ),
-                
+
                 // Status indicator
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   decoration: BoxDecoration(
                     color: isFinished ? AppColors.error : AppColors.orange400,
                     shape: BoxShape.circle,
@@ -190,9 +192,17 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
       return AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
-          final bounceValue = 1 + (0.3 * (0.5 + 0.5 * math.sin(_animationController.value * 2 * math.pi)));
+          final bounceValue =
+              1 +
+              (0.3 *
+                  (0.5 +
+                      0.5 *
+                          math.sin(_animationController.value * 2 * math.pi)));
           return Transform.translate(
-            offset: Offset(0, -3 * math.sin(_animationController.value * 2 * math.pi).abs()),
+            offset: Offset(
+              0,
+              -3 * math.sin(_animationController.value * 2 * math.pi).abs(),
+            ),
             child: Transform.scale(
               scale: bounceValue,
               child: Icon(
@@ -210,11 +220,7 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
         builder: (context, child) {
           return Transform.rotate(
             angle: _animationController.value * 2 * 3.14159,
-            child: Icon(
-              Icons.water_drop_rounded,
-              size: 20,
-              color: AppColors.cyan400,
-            ),
+            child: Icon(Icons.water_drop_rounded, size: 20, color: Colors.cyan),
           );
         },
       );
@@ -223,15 +229,8 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
         animation: _animationController,
         builder: (context, child) {
           return Transform.translate(
-            offset: Offset(
-              ((_animationController.value * 2 - 1) * 3),
-              0,
-            ),
-            child: Icon(
-              Icons.air,
-              size: 20,
-              color: Colors.grey.shade600,
-            ),
+            offset: Offset(((_animationController.value * 2 - 1) * 3), 0),
+            child: Icon(Icons.air, size: 20, color: Colors.grey.shade600),
           );
         },
       );
@@ -242,7 +241,7 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
     final authState = ref.watch(authStateChangesProvider);
     final currentUser = authState.value;
     final isCurrentUserUsing = widget.machine.currentUserId == currentUser?.uid;
-    
+
     if (isCurrentUserUsing) {
       return Text(
         'You are using - ${_formatTime(remainingMinutes)} left',
@@ -254,9 +253,9 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
         overflow: TextOverflow.ellipsis,
       );
     }
-    
+
     final membersAsync = ref.watch(dormMembersProvider(widget.dormId));
-    
+
     return membersAsync.when(
       data: (members) {
         final user = members.firstWhere(
@@ -270,7 +269,7 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
             joinedAt: DateTime.now(),
           ),
         );
-        
+
         return Text(
           '${user.displayName} is using - ${_formatTime(remainingMinutes)} left',
           style: AppTypography.labelSm.copyWith(
@@ -304,10 +303,10 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
 
   String _formatTime(int minutes) {
     if (minutes <= 0) return '0m';
-    
+
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    
+
     if (hours > 0) {
       return '${hours}h ${mins}m';
     } else {

@@ -17,6 +17,7 @@ class GlassBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const BoxDecoration(color: Colors.transparent),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
         child: BackdropFilter(
@@ -24,15 +25,15 @@ class GlassBottomNavigationBar extends StatelessWidget {
           child: Container(
             height: 70,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: AppColors.surface.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: AppColors.outlineVariant.withValues(alpha: 0.3),
                 width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -86,17 +87,14 @@ class GlassBottomNavigationBar extends StatelessWidget {
     required String label,
   }) {
     final isSelected = currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? AppColors.primary.withOpacity(0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -106,22 +104,16 @@ class GlassBottomNavigationBar extends StatelessWidget {
           children: [
             Icon(
               isSelected ? selectedIcon : icon,
-              color: isSelected 
-                  ? AppColors.primary 
-                  : AppColors.cream600,
+              color: isSelected ? AppColors.primary : AppColors.cream600,
               size: 24,
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                color: isSelected 
-                    ? AppColors.primary 
-                    : AppColors.cream600,
+                color: isSelected ? AppColors.primary : AppColors.cream600,
                 fontSize: 10,
-                fontWeight: isSelected 
-                    ? FontWeight.w600 
-                    : FontWeight.w400,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],

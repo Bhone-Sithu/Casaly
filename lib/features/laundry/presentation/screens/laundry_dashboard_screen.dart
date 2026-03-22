@@ -29,7 +29,7 @@ class _LaundryDashboardScreenState
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cream50,
       appBar: AppBar(
         title: Text(
           'Laundry Machines',

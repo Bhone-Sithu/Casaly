@@ -17,13 +17,11 @@ class SettingsScreen extends ConsumerWidget {
     final userDormAsync = ref.watch(currentUserDormProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cream50,
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: AppTypography.h2.copyWith(
-            color: AppColors.green400,
-          ),
+          style: AppTypography.h2.copyWith(color: AppColors.primary),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -35,11 +33,11 @@ class SettingsScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: AppSpacing.md),
-            
+
             // Dorm Settings Section
             _buildSectionHeader('Dorm Settings'),
             const SizedBox(height: AppSpacing.md),
-            
+
             // Invite Code Card
             userDormAsync.when(
               data: (dorm) {
@@ -58,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -71,9 +69,9 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'View and manage dorm details',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.sm),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -86,9 +84,9 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'View and manage dorm members',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.sm),
-            
+
             GlassCard(
               type: GlassType.error,
               onTap: () {
@@ -101,13 +99,13 @@ class SettingsScreen extends ConsumerWidget {
                 isDestructive: true,
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xxxl),
-            
+
             // App Settings Section
             _buildSectionHeader('App Settings'),
             const SizedBox(height: AppSpacing.md),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -119,9 +117,9 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'Manage notification preferences',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.sm),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -133,9 +131,9 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'Manage privacy settings',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.sm),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -147,9 +145,9 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'Get help and contact support',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.sm),
-            
+
             GlassCard(
               type: GlassType.primary,
               onTap: () {
@@ -161,13 +159,13 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'App version and information',
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xxxl),
-            
+
             // Account Section
             _buildSectionHeader('Account'),
             const SizedBox(height: AppSpacing.md),
-            
+
             GlassCard(
               type: GlassType.error,
               onTap: () {
@@ -180,7 +178,7 @@ class SettingsScreen extends ConsumerWidget {
                 isDestructive: true,
               ),
             ),
-            
+
             // Bottom padding for floating nav bar
             const SizedBox(height: 100),
           ],
@@ -198,11 +196,7 @@ class SettingsScreen extends ConsumerWidget {
             color: AppColors.green400.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.qr_code,
-            color: AppColors.green400,
-            size: 20,
-          ),
+          child: Icon(Icons.qr_code, color: AppColors.green400, size: 20),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -227,11 +221,7 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        Icon(
-          Icons.copy,
-          size: 20,
-          color: AppColors.cream400,
-        ),
+        Icon(Icons.copy, size: 20, color: AppColors.cream400),
       ],
     );
   }
@@ -257,8 +247,10 @@ class SettingsScreen extends ConsumerWidget {
   }) {
     final color = isDestructive ? AppColors.error : AppColors.green400;
     final textColor = isDestructive ? AppColors.error : AppColors.cream800;
-    final subtitleColor = isDestructive ? AppColors.error.withOpacity(0.7) : AppColors.cream600;
-    
+    final subtitleColor = isDestructive
+        ? AppColors.error.withOpacity(0.7)
+        : AppColors.cream600;
+
     return Row(
       children: [
         Container(
@@ -267,11 +259,7 @@ class SettingsScreen extends ConsumerWidget {
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -287,18 +275,12 @@ class SettingsScreen extends ConsumerWidget {
               ),
               Text(
                 subtitle,
-                style: AppTypography.bodySm.copyWith(
-                  color: subtitleColor,
-                ),
+                style: AppTypography.bodySm.copyWith(color: subtitleColor),
               ),
             ],
           ),
         ),
-        Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: AppColors.cream400,
-        ),
+        Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.cream400),
       ],
     );
   }
@@ -351,7 +333,10 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Leave Dorm', style: AppTypography.h3.copyWith(color: AppColors.error)),
+        title: Text(
+          'Leave Dorm',
+          style: AppTypography.h3.copyWith(color: AppColors.error),
+        ),
         content: Text(
           'Are you sure you want to leave this dorm? You\'ll need an invite code to rejoin.',
           style: AppTypography.bodyMd,
