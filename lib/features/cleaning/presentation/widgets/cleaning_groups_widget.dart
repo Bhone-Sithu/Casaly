@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/cleaning_providers.dart';
 
 class CleaningGroupsWidget extends ConsumerStatefulWidget {
@@ -407,8 +410,24 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
         dormId: dormId,
         onGroupCreated: (group) async {
           try {
-            final createFuture = ref.read(createCleaningGroupProvider(group));
-            await createFuture;
+            final createdGroup = await ref.read(createCleaningGroupProvider(group));
+            
+            // Log the audit action
+            final currentUser = ref.read(authStateChangesProvider).asData?.value;
+            if (currentUser != null) {
+              final auditLogger = ref.read(auditLoggerProvider);
+              await auditLogger.logCleaningAction(
+                dormId: dormId,
+                action: AuditLogAction.cleaningGroupCreated,
+                actorUserId: currentUser.uid,
+                actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+                title: 'Cleaning group created',
+                description: '${currentUser.displayName ?? 'Unknown User'} created cleaning group "${createdGroup.name}" with ${createdGroup.memberIds.length} members',
+                priority: AuditLogPriority.medium,
+                groupId: createdGroup.id,
+                groupName: createdGroup.name,
+              );
+            }
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Group created successfully!')),
@@ -470,7 +489,33 @@ class _CleaningGroupsWidgetState extends ConsumerState<CleaningGroupsWidget> {
             availableMembers: members,
             onGroupUpdated: (updatedGroup) async {
               try {
+                print('🧹 DEBUG: About to update group');
                 await ref.read(updateCleaningGroupProvider(updatedGroup).future);
+                
+                // Log the audit action
+                print('🧹 DEBUG: About to log group update audit action');
+                final currentUser = ref.read(authStateChangesProvider).asData?.value;
+                if (currentUser != null && dorm != null) {
+                  print('🧹 DEBUG: User and dorm found: ${currentUser.uid}, dormId: ${dorm.id}');
+                  final auditLogger = ref.read(auditLoggerProvider);
+                  
+                  print('🧹 DEBUG: Calling logCleaningAction for group update');
+                  await auditLogger.logCleaningAction(
+                    dormId: dorm.id,
+                    action: AuditLogAction.cleaningGroupUpdated,
+                    actorUserId: currentUser.uid,
+                    actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+                    title: 'Cleaning group updated',
+                    description: '${currentUser.displayName ?? 'Unknown User'} updated group "${updatedGroup.name}"',
+                    priority: AuditLogPriority.low,
+                    groupId: updatedGroup.id,
+                    groupName: updatedGroup.name,
+                  );
+                  print('🧹 DEBUG: Group update audit log completed');
+                } else {
+                  print('🧹 DEBUG: No user or dorm found - skipping audit log');
+                }
+                
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Group updated successfully!')),

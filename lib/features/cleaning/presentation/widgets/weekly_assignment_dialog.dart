@@ -4,6 +4,9 @@ import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/cleaning_providers.dart';
 
 class WeeklyAssignmentDialog extends ConsumerStatefulWidget {
@@ -516,10 +519,44 @@ class _WeeklyAssignmentDialogState
     Navigator.pop(context);
 
     try {
-      final createFuture = ref.read(
+      final createdAssignment = await ref.read(
         createCleaningAssignmentProvider(assignment),
       );
-      await createFuture;
+      
+      // Log the audit action
+      print('🧹 DEBUG: About to log cleaning assignment created audit action');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null && _currentDormId != null) {
+        print('🧹 DEBUG: User and dorm found: ${currentUser.uid}, dormId: $_currentDormId');
+        final auditLogger = ref.read(auditLoggerProvider);
+        
+        String assignmentDescription;
+        if (createdAssignment.isGroupAssignment) {
+          // Find group name for better description
+          final groups = await ref.read(dormCleaningGroupsProvider(_currentDormId!).future);
+          final group = groups.firstWhere((g) => g.id == createdAssignment.assignedGroupId, 
+                                          orElse: () => CleaningGroup(id: '', dormId: '', name: 'Unknown Group', memberIds: [], createdAt: DateTime.now()));
+          assignmentDescription = '${currentUser.displayName ?? 'Unknown User'} assigned cleaning for week ${createdAssignment.weekNumber} (${createdAssignment.monthYearLabel}) to group "${group.name}"';
+        } else {
+          assignmentDescription = '${currentUser.displayName ?? 'Unknown User'} assigned cleaning for week ${createdAssignment.weekNumber} (${createdAssignment.monthYearLabel}) to specific members';
+        }
+        
+        print('🧹 DEBUG: Calling logCleaningAction');
+        await auditLogger.logCleaningAction(
+          dormId: _currentDormId!,
+          action: AuditLogAction.cleaningAssignmentChanged,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Cleaning assignment created',
+          description: assignmentDescription,
+          priority: AuditLogPriority.medium,
+          scheduleId: createdAssignment.id,
+          weekDate: '${createdAssignment.monthYearLabel} Week ${createdAssignment.weekNumber}',
+        );
+        print('🧹 DEBUG: Cleaning assignment audit log completed');
+      } else {
+        print('🧹 DEBUG: No user or dorm found - skipping audit log');
+      }
       
       // Invalidate providers to ensure UI updates immediately
       if (_currentDormId != null) {

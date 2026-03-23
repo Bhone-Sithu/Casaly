@@ -6,6 +6,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/casaly_button.dart';
 import '../../../../core/widgets/casaly_text_field.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
+import '../../../audit/domain/services/audit_logger.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/dorm_providers.dart';
 
 class CreateDormScreen extends ConsumerStatefulWidget {
@@ -42,6 +46,26 @@ class _CreateDormScreenState extends ConsumerState<CreateDormScreen> {
       );
 
       final dorm = await ref.read(createDormProvider(params).future);
+      
+      // Log the audit action
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        final auditLogger = ref.read(auditLoggerProvider);
+        await auditLogger.logDormAction(
+          dormId: dorm.id,
+          action: AuditLogAction.dormCreated,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Dorm created',
+          description: '${currentUser.displayName ?? 'Unknown User'} created "${dorm.name}"',
+          priority: AuditLogPriority.high,
+          metadata: {
+            'dormName': dorm.name,
+            if (dorm.description != null) 'description': dorm.description,
+            'inviteCode': dorm.inviteCode,
+          },
+        );
+      }
       
       // Invalidate user dorm provider to refresh the dorm status
       ref.invalidate(userDormProvider);

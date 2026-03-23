@@ -7,10 +7,12 @@ import 'package:casaly/core/theme/app_theme.dart';
 import 'package:casaly/firebase_options.dart';
 
 void main() async {
+  print('🚀 DEBUG: App starting up - debug logging is working!');
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  print('🚀 DEBUG: Firebase initialized');
   runApp(const ProviderScope(child: MyApp()));
 }
 

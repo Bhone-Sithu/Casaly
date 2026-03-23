@@ -9,6 +9,9 @@ import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
 import '../providers/cleaning_providers.dart';
 import '../widgets/weekly_assignment_dialog.dart';
 import '../widgets/cleaning_groups_widget.dart';
@@ -797,6 +800,7 @@ class _WeeklyCleaningScheduleScreenState
             onPressed: () async {
               Navigator.pop(context);
               try {
+                print('🧹 DEBUG: About to delete single assignment');
                 final deleteFuture = ref.read(
                   deleteCleaningAssignmentProvider((
                     assignmentId: assignment.id,
@@ -804,6 +808,38 @@ class _WeeklyCleaningScheduleScreenState
                   )),
                 );
                 await deleteFuture;
+                
+                // Log the audit action
+                print('🧹 DEBUG: About to log single assignment removal audit action');
+                final currentUser = ref.read(authStateChangesProvider).asData?.value;
+                if (currentUser != null) {
+                  print('🧹 DEBUG: User found: ${currentUser.uid}');
+                  final auditLogger = ref.read(auditLoggerProvider);
+                  
+                  String assignmentDescription;
+                  if (assignment.isGroupAssignment) {
+                    assignmentDescription = '${currentUser.displayName ?? 'Unknown User'} removed group assignment for ${assignment.weekLabel}';
+                  } else {
+                    assignmentDescription = '${currentUser.displayName ?? 'Unknown User'} removed individual assignment for ${assignment.weekLabel}';
+                  }
+                  
+                  print('🧹 DEBUG: Calling logCleaningAction for assignment removal');
+                  await auditLogger.logCleaningAction(
+                    dormId: assignment.dormId,
+                    action: AuditLogAction.cleaningAssignmentChanged,
+                    actorUserId: currentUser.uid,
+                    actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+                    title: 'Cleaning assignment removed',
+                    description: assignmentDescription,
+                    priority: AuditLogPriority.medium,
+                    scheduleId: assignment.id,
+                    weekDate: assignment.weekLabel,
+                  );
+                  print('🧹 DEBUG: Single assignment removal audit log completed');
+                } else {
+                  print('🧹 DEBUG: No user found - skipping audit log');
+                }
+                
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -970,6 +1006,30 @@ class _WeeklyCleaningScheduleScreenState
 
       // Execute all assignments
       await Future.wait(createOperations);
+      
+      // Log the audit action
+      print('🧹 DEBUG: About to log auto assignment audit action');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        print('🧹 DEBUG: User found: ${currentUser.uid}');
+        final auditLogger = ref.read(auditLoggerProvider);
+        
+        final monthName = _formatMonthYear(_selectedDate);
+        print('🧹 DEBUG: Calling logCleaningAction for auto assignment');
+        await auditLogger.logCleaningAction(
+          dormId: dorm.id,
+          action: AuditLogAction.cleaningAssignmentChanged,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Auto assignment completed',
+          description: '${currentUser.displayName ?? 'Unknown User'} auto-assigned ${unassignedWeeks.length} weeks for $monthName',
+          priority: AuditLogPriority.medium,
+          weekDate: monthName,
+        );
+        print('🧹 DEBUG: Auto assignment audit log completed');
+      } else {
+        print('🧹 DEBUG: No user found - skipping audit log');
+      }
 
       // Invalidate assignments to refresh UI
       ref.invalidate(dormCleaningAssignmentsForMonthProvider((
@@ -1034,6 +1094,29 @@ class _WeeklyCleaningScheduleScreenState
                   );
 
                   await Future.wait(deleteOperations);
+                  
+                  // Log the audit action
+                  print('🧹 DEBUG: About to log clear month audit action');
+                  final currentUser = ref.read(authStateChangesProvider).asData?.value;
+                  if (currentUser != null) {
+                    print('🧹 DEBUG: User found: ${currentUser.uid}');
+                    final auditLogger = ref.read(auditLoggerProvider);
+                    
+                    print('🧹 DEBUG: Calling logCleaningAction for clear month');
+                    await auditLogger.logCleaningAction(
+                      dormId: dorm.id,
+                      action: AuditLogAction.cleaningAssignmentChanged,
+                      actorUserId: currentUser.uid,
+                      actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+                      title: 'Month assignments cleared',
+                      description: '${currentUser.displayName ?? 'Unknown User'} cleared all assignments for $monthName ${_selectedDate.year}',
+                      priority: AuditLogPriority.high,
+                      weekDate: '$monthName ${_selectedDate.year}',
+                    );
+                    print('🧹 DEBUG: Clear month audit log completed');
+                  } else {
+                    print('🧹 DEBUG: No user found - skipping audit log');
+                  }
 
                   // Invalidate providers to refresh UI
                   ref.invalidate(dormCleaningAssignmentsProvider(dorm.id));

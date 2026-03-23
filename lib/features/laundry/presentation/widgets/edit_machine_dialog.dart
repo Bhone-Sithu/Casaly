@@ -5,6 +5,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/casaly_text_field.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/services/audit_logger.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/laundry_providers.dart';
 import '../../domain/entities/laundry_machine.dart';
 
@@ -353,6 +357,54 @@ class _EditMachineDialogState extends ConsumerState<EditMachineDialog> {
       );
 
       await ref.read(updateLaundryMachineProvider(updatedMachine).future);
+      
+      // Log the audit action
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        final auditLogger = ref.read(auditLoggerProvider);
+        
+        // Determine the action based on what changed
+        AuditLogAction action;
+        String title;
+        String description;
+        AuditLogPriority priority = AuditLogPriority.medium;
+        
+        if (widget.machine.status != updatedMachine.status) {
+          if (updatedMachine.status == MachineStatus.maintenance) {
+            action = AuditLogAction.machineBroken;
+            title = 'Machine marked as broken';
+            description = '${currentUser.displayName ?? 'Unknown User'} marked ${updatedMachine.name} as broken/maintenance';
+            priority = AuditLogPriority.high;
+          } else if (updatedMachine.status == MachineStatus.available) {
+            action = AuditLogAction.machineFixed;
+            title = 'Machine fixed';
+            description = '${currentUser.displayName ?? 'Unknown User'} marked ${updatedMachine.name} as available';
+            priority = AuditLogPriority.medium;
+          } else {
+            action = AuditLogAction.machineStarted;
+            title = 'Machine status changed';
+            description = '${currentUser.displayName ?? 'Unknown User'} changed ${updatedMachine.name} status to ${updatedMachine.status.displayName}';
+          }
+        } else {
+          action = AuditLogAction.machineFixed; // Generic machine update
+          title = 'Machine updated';
+          description = '${currentUser.displayName ?? 'Unknown User'} updated ${updatedMachine.name} settings';
+        }
+        
+        await auditLogger.logLaundryAction(
+          dormId: updatedMachine.dormId,
+          action: action,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: title,
+          description: description,
+          priority: priority,
+          machineId: updatedMachine.id,
+          machineLabel: updatedMachine.name,
+          reason: updatedMachine.notes,
+        );
+      }
+      
       widget.onMachineUpdated();
       
       if (mounted) {

@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../providers/laundry_providers.dart';
@@ -652,12 +654,38 @@ class _GlassMachineCardState extends ConsumerState<GlassMachineCard>
 
   Future<void> _collectMachine() async {
     try {
+      print('🧺 DEBUG: About to collect machine');
       await ref.read(
         stopMachineProvider((
           machineId: widget.machine.id,
           dormId: widget.dormId,
         )),
       );
+      
+      // Log the audit action
+      print('🧺 DEBUG: About to log machine collected audit action');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        print('🧺 DEBUG: User found: ${currentUser.uid}');
+        final auditLogger = ref.read(auditLoggerProvider);
+        print('🧺 DEBUG: Calling logLaundryAction for collect machine');
+        await auditLogger.logLaundryAction(
+          dormId: widget.dormId,
+          action: AuditLogAction.machineMarkedAvailable,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Machine collected',
+          description: '${currentUser.displayName ?? 'Unknown User'} collected laundry from ${widget.machine.name}',
+          priority: AuditLogPriority.low,
+          machineId: widget.machine.id,
+          machineLabel: widget.machine.name,
+          reason: 'Laundry collected',
+        );
+        print('🧺 DEBUG: Machine collected audit log completed');
+      } else {
+        print('🧺 DEBUG: No user found - skipping audit log');
+      }
+      
       widget.onMachineUpdated();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -704,12 +732,37 @@ class _GlassMachineCardState extends ConsumerState<GlassMachineCard>
 
     if (confirmed == true) {
       try {
+        print('🧺 DEBUG: About to delete machine');
         await ref.read(
           deleteLaundryMachineProvider((
             machineId: widget.machine.id,
             dormId: widget.dormId,
           )),
         );
+        
+        // Log the audit action
+        print('🧺 DEBUG: About to log machine deletion audit action');
+        final currentUser = ref.read(authStateChangesProvider).asData?.value;
+        if (currentUser != null) {
+          print('🧺 DEBUG: User found: ${currentUser.uid}');
+          final auditLogger = ref.read(auditLoggerProvider);
+          print('🧺 DEBUG: Calling logLaundryAction for machine deletion');
+          await auditLogger.logLaundryAction(
+            dormId: widget.dormId,
+            action: AuditLogAction.machineRemoved,
+            actorUserId: currentUser.uid,
+            actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+            title: 'Machine removed',
+            description: '${currentUser.displayName ?? 'Unknown User'} deleted ${widget.machine.name}',
+            priority: AuditLogPriority.high,
+            machineId: widget.machine.id,
+            machineLabel: widget.machine.name,
+          );
+          print('🧺 DEBUG: Machine deletion audit log completed');
+        } else {
+          print('🧺 DEBUG: No user found - skipping audit log');
+        }
+        
         widget.onMachineUpdated();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

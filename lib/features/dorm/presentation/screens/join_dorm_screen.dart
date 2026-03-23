@@ -7,6 +7,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/invite_code_generator.dart';
 import '../../../../core/widgets/casaly_button.dart';
 import '../../../../core/widgets/casaly_text_field.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/services/audit_logger.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/dorm_providers.dart';
 
 class JoinDormScreen extends ConsumerStatefulWidget {
@@ -35,6 +38,26 @@ class _JoinDormScreenState extends ConsumerState<JoinDormScreen> {
     try {
       final inviteCode = _inviteCodeController.text.trim().toUpperCase();
       final dorm = await ref.read(joinDormProvider(inviteCode).future);
+      
+      // Log the audit action
+      print('🏠 DEBUG: About to log user joined audit action');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      print('🏠 DEBUG: Current user: ${currentUser?.uid}, displayName: ${currentUser?.displayName}');
+      
+      if (currentUser != null) {
+        print('🏠 DEBUG: Creating audit logger');
+        final auditLogger = ref.read(auditLoggerProvider);
+        print('🏠 DEBUG: Calling logUserJoined');
+        await auditLogger.logUserJoined(
+          dormId: dorm.id,
+          userId: currentUser.uid,
+          userName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          inviteCode: inviteCode,
+        );
+        print('🏠 DEBUG: logUserJoined completed');
+      } else {
+        print('🏠 DEBUG: No current user found - skipping audit log');
+      }
       
       // Invalidate user dorm provider to refresh the dorm status
       ref.invalidate(userDormProvider);

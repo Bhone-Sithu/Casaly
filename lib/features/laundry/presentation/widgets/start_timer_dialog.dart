@@ -1,3 +1,4 @@
+import 'package:casaly/features/audit/domain/services/audit_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -5,6 +6,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
 import '../providers/laundry_providers.dart';
 import '../../domain/entities/laundry_machine.dart';
 
@@ -50,7 +53,7 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
             style: AppTypography.labelMd.copyWith(color: AppColors.cream800),
           ),
           const SizedBox(height: AppSpacing.md),
-          
+
           // Preset duration chips
           Wrap(
             spacing: AppSpacing.sm,
@@ -72,7 +75,9 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
                     color: isSelected ? AppColors.green400 : AppColors.cream100,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
-                      color: isSelected ? AppColors.green400 : AppColors.cream200,
+                      color: isSelected
+                          ? AppColors.green400
+                          : AppColors.cream200,
                       width: 1,
                     ),
                   ),
@@ -86,15 +91,17 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: AppSpacing.lg),
-          
+
           // Custom duration input
           Row(
             children: [
               Text(
                 'Custom: ',
-                style: AppTypography.labelMd.copyWith(color: AppColors.cream800),
+                style: AppTypography.labelMd.copyWith(
+                  color: AppColors.cream800,
+                ),
               ),
               Expanded(
                 child: TextFormField(
@@ -155,10 +162,7 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : Text(
-                  'Start',
-                  style: AppTypography.labelMd,
-                ),
+              : Text('Start', style: AppTypography.labelMd),
         ),
       ],
     );
@@ -167,7 +171,7 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
   Future<void> _startMachine() async {
     final authState = ref.watch(authStateChangesProvider);
     final currentUser = authState.value;
-    
+
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -181,20 +185,42 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(startMachineProvider((
-        machineId: widget.machine.id,
+      print('🧺 DEBUG: About to start machine via StartTimerDialog');
+      await ref.read(
+        startMachineProvider((
+          machineId: widget.machine.id,
+          dormId: widget.dormId,
+          userId: currentUser.uid,
+          durationMinutes: _selectedMinutes,
+        )),
+      );
+
+      // Log the audit action
+      print(
+        '🧺 DEBUG: About to log machine started audit action (StartTimerDialog)',
+      );
+      final auditLogger = ref.read(auditLoggerProvider);
+      print('🧺 DEBUG: Calling logMachineStarted (StartTimerDialog)');
+      await auditLogger.logMachineStarted(
         dormId: widget.dormId,
         userId: currentUser.uid,
-        durationMinutes: _selectedMinutes,
-      )));
-      
+        userName:
+            currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+        machineId: widget.machine.id,
+        machineLabel: widget.machine.name,
+        duration: '${_selectedMinutes} minutes',
+      );
+      print('🧺 DEBUG: Machine started audit log completed (StartTimerDialog)');
+
       widget.onMachineUpdated();
-      
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${widget.machine.name} started for ${_formatDuration(_selectedMinutes)}'),
+            content: Text(
+              '${widget.machine.name} started for ${_formatDuration(_selectedMinutes)}',
+            ),
             backgroundColor: AppColors.green400,
           ),
         );

@@ -6,6 +6,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/services/audit_logger.dart';
 import '../providers/laundry_providers.dart';
 import '../../domain/entities/laundry_machine.dart';
 
@@ -173,6 +175,7 @@ class _StartMachineDialogState extends ConsumerState<StartMachineDialog> {
   }
 
   Future<void> _startMachine() async {
+    print('🔥 DEBUG: _startMachine method called!');
     final durationText = _durationController.text.trim();
     if (durationText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -206,6 +209,7 @@ class _StartMachineDialogState extends ConsumerState<StartMachineDialog> {
     }
 
     setState(() => _isLoading = true);
+    print('🔥 DEBUG: About to call startMachineProvider');
 
     try {
       await ref.read(startMachineProvider((
@@ -214,6 +218,21 @@ class _StartMachineDialogState extends ConsumerState<StartMachineDialog> {
         userId: currentUser.uid,
         durationMinutes: duration,
       )));
+      
+      // Log the audit action
+      print('🧺 DEBUG: About to log machine started audit action');
+      print('🧺 DEBUG: Machine: ${widget.machine.name}, Duration: $duration minutes');
+      final auditLogger = ref.read(auditLoggerProvider);
+      print('🧺 DEBUG: Calling logMachineStarted');
+      await auditLogger.logMachineStarted(
+        dormId: widget.dormId,
+        userId: currentUser.uid,
+        userName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+        machineId: widget.machine.id,
+        machineLabel: widget.machine.name,
+        duration: '$duration minutes',
+      );
+      print('🧺 DEBUG: Machine started audit log completed');
       
       widget.onMachineStarted();
       

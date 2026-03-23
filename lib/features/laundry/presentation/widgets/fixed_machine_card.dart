@@ -6,6 +6,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/services/audit_logger.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
 import '../providers/laundry_providers.dart';
 import '../widgets/start_timer_dialog.dart';
 import '../widgets/edit_machine_dialog.dart';
@@ -393,6 +396,25 @@ class _FixedMachineCardState extends ConsumerState<FixedMachineCard> {
         machineId: widget.machine.id,
         dormId: widget.dormId,
       )));
+      
+      // Log the audit action
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        final auditLogger = ref.read(auditLoggerProvider);
+        await auditLogger.logLaundryAction(
+          dormId: widget.dormId,
+          action: AuditLogAction.machineMarkedAvailable,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Machine stopped',
+          description: '${currentUser.displayName ?? 'Unknown User'} stopped ${widget.machine.name}',
+          priority: AuditLogPriority.medium,
+          machineId: widget.machine.id,
+          machineLabel: widget.machine.name,
+          reason: 'Manual stop',
+        );
+      }
+      
       widget.onMachineUpdated();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -439,6 +461,24 @@ class _FixedMachineCardState extends ConsumerState<FixedMachineCard> {
           machineId: widget.machine.id,
           dormId: widget.dormId,
         )));
+        
+        // Log the audit action
+        final currentUser = ref.read(authStateChangesProvider).asData?.value;
+        if (currentUser != null) {
+          final auditLogger = ref.read(auditLoggerProvider);
+          await auditLogger.logLaundryAction(
+            dormId: widget.dormId,
+            action: AuditLogAction.machineRemoved,
+            actorUserId: currentUser.uid,
+            actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+            title: 'Machine removed',
+            description: '${currentUser.displayName ?? 'Unknown User'} deleted ${widget.machine.name}',
+            priority: AuditLogPriority.high,
+            machineId: widget.machine.id,
+            machineLabel: widget.machine.name,
+          );
+        }
+        
         widget.onMachineUpdated();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -462,11 +502,33 @@ class _FixedMachineCardState extends ConsumerState<FixedMachineCard> {
   }
 
   Future<void> _markMachineFinished() async {
+    print('🔥 DEBUG: _markMachineFinished method called!');
     try {
+      print('🔥 DEBUG: About to call markMachineFinishedProvider');
       await ref.read(markMachineFinishedProvider((
         machineId: widget.machine.id,
         dormId: widget.dormId,
       )));
+      
+      // Log the audit action
+      print('🏁 DEBUG: About to log machine finished audit action');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        print('🏁 DEBUG: User found: ${currentUser.uid}');
+        final auditLogger = ref.read(auditLoggerProvider);
+        print('🏁 DEBUG: Calling logMachineFinished');
+        await auditLogger.logMachineFinished(
+          dormId: widget.dormId,
+          userId: currentUser.uid,
+          userName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          machineId: widget.machine.id,
+          machineLabel: widget.machine.name,
+        );
+        print('🏁 DEBUG: Machine finished audit log completed');
+      } else {
+        print('🏁 DEBUG: No user found - skipping audit log');
+      }
+      
       widget.onMachineUpdated();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

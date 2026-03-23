@@ -5,6 +5,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/widgets/casaly_text_field.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/services/audit_logger.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/laundry_providers.dart';
 import '../../domain/entities/laundry_machine.dart';
 
@@ -259,7 +263,25 @@ class _AddMachineDialogState extends ConsumerState<AddMachineDialog> {
         createdAt: DateTime.now(),
       );
 
-      await ref.read(createLaundryMachineProvider(machine));
+      final createdMachine = await ref.read(createLaundryMachineProvider(machine));
+      
+      // Log the audit action
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        final auditLogger = ref.read(auditLoggerProvider);
+        await auditLogger.logLaundryAction(
+          dormId: widget.dormId,
+          action: AuditLogAction.machineAdded,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Machine added',
+          description: '${currentUser.displayName ?? 'Unknown User'} added ${machine.name} (${machine.type.displayName})',
+          priority: AuditLogPriority.medium,
+          machineId: createdMachine.id,
+          machineLabel: machine.name,
+        );
+      }
+      
       widget.onMachineAdded();
       
       if (mounted) {

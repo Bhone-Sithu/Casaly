@@ -9,6 +9,7 @@ abstract class FirestorePaths {
   static const laundryMachines = 'laundry_machines';
   static const chatRooms = 'chat_rooms';
   static const shoppingList = 'shoppingList';
+  static const auditLogs = 'audit_logs';
 
   static String dormMembers(String dormId) => '$dorms/$dormId/$members';
   static String dormSchedule(String dormId) => '$dorms/$dormId/$cleaningSchedule';
@@ -16,4 +17,5 @@ abstract class FirestorePaths {
   static String dormLaundryMachines(String dormId) => '$dorms/$dormId/$laundryMachines';
   static String dormGroups(String dormId) => '$dorms/$dormId/$cleaningGroups';
   static String dormSwaps(String dormId) => '$dorms/$dormId/$cleaningSwaps';
+  static String dormAuditLogs(String dormId) => '$dorms/$dormId/$auditLogs';
 }
