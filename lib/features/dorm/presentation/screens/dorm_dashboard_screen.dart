@@ -1070,8 +1070,6 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
           ),
         ),
 
-        const SizedBox(height: AppSpacing.lg),
-
         // Grid layout for quick actions
         GridView.count(
           crossAxisCount: 2,

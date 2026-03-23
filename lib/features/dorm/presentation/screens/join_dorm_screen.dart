@@ -36,6 +36,10 @@ class _JoinDormScreenState extends ConsumerState<JoinDormScreen> {
       final inviteCode = _inviteCodeController.text.trim().toUpperCase();
       final dorm = await ref.read(joinDormProvider(inviteCode).future);
       
+      // Invalidate user dorm provider to refresh the dorm status
+      ref.invalidate(userDormProvider);
+      ref.invalidate(currentUserDormProvider);
+      
       if (mounted) {
         context.go('/dorm');
         ScaffoldMessenger.of(context).showSnackBar(

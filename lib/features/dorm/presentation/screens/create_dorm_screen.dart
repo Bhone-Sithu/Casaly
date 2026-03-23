@@ -43,6 +43,10 @@ class _CreateDormScreenState extends ConsumerState<CreateDormScreen> {
 
       final dorm = await ref.read(createDormProvider(params).future);
       
+      // Invalidate user dorm provider to refresh the dorm status
+      ref.invalidate(userDormProvider);
+      ref.invalidate(currentUserDormProvider);
+      
       if (mounted) {
         context.go('/dorm');
         ScaffoldMessenger.of(context).showSnackBar(

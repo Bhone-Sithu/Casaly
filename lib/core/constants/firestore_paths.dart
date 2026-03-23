@@ -7,6 +7,7 @@ abstract class FirestorePaths {
   static const cleaningSwaps = 'cleaningSwaps';
   static const washingMachines = 'washingMachines'; // Legacy - kept for compatibility
   static const laundryMachines = 'laundry_machines';
+  static const chatRooms = 'chat_rooms';
   static const shoppingList = 'shoppingList';
 
   static String dormMembers(String dormId) => '$dorms/$dormId/$members';
