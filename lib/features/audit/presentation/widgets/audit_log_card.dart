@@ -21,7 +21,7 @@ class AuditLogCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: _getPriorityColor().withValues(alpha: 0.2),
@@ -68,7 +68,7 @@ class AuditLogCard extends StatelessWidget {
                       child: Text(
                         logEntry.title,
                         style: AppTypography.labelLg.copyWith(
-                          color: AppColors.onSurface,
+                          color: AppColors.cream800,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -76,7 +76,7 @@ class AuditLogCard extends StatelessWidget {
                     Text(
                       logEntry.getTimeAgo(),
                       style: AppTypography.labelSm.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: AppColors.cream600,
                       ),
                     ),
                   ],
@@ -88,7 +88,7 @@ class AuditLogCard extends StatelessWidget {
                 Text(
                   logEntry.description,
                   style: AppTypography.bodyMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                    color: AppColors.cream600,
                   ),
                 ),
                 
@@ -100,13 +100,13 @@ class AuditLogCard extends StatelessWidget {
                       Icon(
                         Icons.person_outline,
                         size: 14,
-                        color: AppColors.onSurfaceVariant,
+                        color: AppColors.cream600,
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         logEntry.actorDisplayName,
                         style: AppTypography.labelSm.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: AppColors.cream600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -122,13 +122,13 @@ class AuditLogCard extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward,
                         size: 14,
-                        color: AppColors.onSurfaceVariant,
+                        color: AppColors.cream600,
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         logEntry.targetUserName!,
                         style: AppTypography.labelSm.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: AppColors.cream600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -148,13 +148,13 @@ class AuditLogCard extends StatelessWidget {
                                 Icon(
                                   _getMetadataIcon(entry.key),
                                   size: 12,
-                                  color: AppColors.onSurfaceVariant,
+                                  color: AppColors.cream600,
                                 ),
                                 const SizedBox(width: AppSpacing.xs),
                                 Text(
                                   '${_formatMetadataKey(entry.key)}: ${entry.value}',
                                   style: AppTypography.labelSm.copyWith(
-                                    color: AppColors.onSurfaceVariant,
+                                    color: AppColors.cream600,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -183,13 +183,13 @@ class AuditLogCard extends StatelessWidget {
   Color _getPriorityColor() {
     switch (logEntry.priority) {
       case AuditLogPriority.low:
-        return AppColors.outline;
+        return AppColors.cream400;
       case AuditLogPriority.medium:
-        return AppColors.secondary;
+        return AppColors.orange400;
       case AuditLogPriority.high:
-        return AppColors.primary;
+        return AppColors.green400;
       case AuditLogPriority.urgent:
-        return AppColors.tertiary;
+        return AppColors.berry400;
     }
   }
 

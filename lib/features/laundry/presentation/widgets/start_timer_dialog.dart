@@ -1,4 +1,3 @@
-import 'package:casaly/features/audit/domain/services/audit_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -200,12 +199,15 @@ class _StartTimerDialogState extends ConsumerState<StartTimerDialog> {
         '🧺 DEBUG: About to log machine started audit action (StartTimerDialog)',
       );
       final auditLogger = ref.read(auditLoggerProvider);
-      print('🧺 DEBUG: Calling logMachineStarted (StartTimerDialog)');
-      await auditLogger.logMachineStarted(
+      print('🧺 DEBUG: Calling logLaundryAction (StartTimerDialog)');
+      await auditLogger.logLaundryAction(
         dormId: widget.dormId,
-        userId: currentUser.uid,
-        userName:
-            currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+        action: AuditLogAction.machineStarted,
+        actorUserId: currentUser.uid,
+        actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+        title: 'Machine started',
+        description: '${currentUser.displayName ?? 'Unknown User'} started ${widget.machine.name}',
+        priority: AuditLogPriority.medium,
         machineId: widget.machine.id,
         machineLabel: widget.machine.name,
         duration: '${_selectedMinutes} minutes',

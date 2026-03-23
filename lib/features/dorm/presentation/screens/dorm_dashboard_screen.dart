@@ -14,6 +14,7 @@ import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/greeting_section.dart';
 import '../../../cleaning/presentation/widgets/week_cleaning_card.dart';
+import '../../../audit/presentation/screens/audit_notification_screen.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../cleaning/presentation/screens/weekly_cleaning_schedule_screen.dart';
 import '../../../cleaning/domain/entities/cleaning_assignment.dart';
@@ -356,7 +357,12 @@ class _DormDashboardState extends ConsumerState<_DormDashboard> {
                       userProfileImageUrl:
                           null, // Firebase User photoURL might not be available
                       onNotificationTap: () {
-                        // TODO: Navigate to notifications
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AuditNotificationScreen(),
+                          ),
+                        );
                       },
                       onAvatarTap: () {
                         // TODO: Navigate to profile

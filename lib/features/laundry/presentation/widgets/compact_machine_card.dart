@@ -10,6 +10,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../dorm/presentation/providers/dorm_providers.dart';
 import '../../../dorm/domain/entities/dorm_member.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../screens/laundry_dashboard_screen.dart';
 import '../../domain/entities/laundry_machine.dart';
 
 class CompactMachineCard extends ConsumerStatefulWidget {
@@ -59,126 +60,141 @@ class _CompactMachineCardState extends ConsumerState<CompactMachineCard>
     final remainingMinutes = widget.machine.remainingMinutes ?? 0;
     final isExpired = remainingMinutes <= 0;
 
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: AppSpacing.md),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.md),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            isFinished
-                ? AppColors.error.withOpacity(0.1)
+    final currentUserDorm = ref.watch(currentUserDormProvider);
+
+    return GestureDetector(
+      onTap: () {
+        final dorm = currentUserDorm.value;
+        if (dorm != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LaundryDashboardScreen(dorm: dorm),
+            ),
+          );
+        }
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: AppSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              isFinished
+                  ? AppColors.error.withOpacity(0.1)
+                  : widget.machine.type == MachineType.washer
+                  ? AppColors.cyan400.withOpacity(0.1)
+                  : Colors.grey.withOpacity(0.1),
+              Colors.white.withOpacity(0.05),
+            ],
+          ),
+          border: Border.all(
+            color: isFinished
+                ? AppColors.error.withOpacity(0.2)
                 : widget.machine.type == MachineType.washer
-                ? AppColors.cyan400.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+                ? AppColors.cyan400.withOpacity(0.2)
+                : Colors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isFinished
+                  ? AppColors.error.withOpacity(0.1)
+                  : widget.machine.type == MachineType.washer
+                  ? AppColors.cyan400.withOpacity(0.1)
+                  : Colors.grey.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
           ],
         ),
-        border: Border.all(
-          color: isFinished
-              ? AppColors.error.withOpacity(0.2)
-              : widget.machine.type == MachineType.washer
-              ? AppColors.cyan400.withOpacity(0.2)
-              : Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isFinished
-                ? AppColors.error.withOpacity(0.1)
-                : widget.machine.type == MachineType.washer
-                ? AppColors.cyan400.withOpacity(0.1)
-                : Colors.grey.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSpacing.md),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withOpacity(0.2),
-                  Colors.white.withOpacity(0.05),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.2),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Machine icon with animation
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isFinished
+                          ? AppColors.error.withOpacity(0.15)
+                          : widget.machine.type == MachineType.washer
+                          ? AppColors.cyan400.withOpacity(0.15)
+                          : Colors.grey.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(child: _buildAnimatedIcon()),
+                  ),
+
+                  const SizedBox(width: AppSpacing.sm),
+
+                  // Machine info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Machine name
+                        Text(
+                          widget.machine.name,
+                          style: AppTypography.bodyLg.copyWith(
+                            color: AppColors.cream800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        // Status
+                        isFinished
+                            ? Text(
+                                'Finished - Collect now',
+                                style: AppTypography.labelSm.copyWith(
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : _buildStatusText(remainingMinutes),
+                      ],
+                    ),
+                  ),
+
+                  // Status indicator
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isFinished ? AppColors.error : AppColors.orange400,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            child: Row(
-              children: [
-                // Machine icon with animation
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isFinished
-                        ? AppColors.error.withOpacity(0.15)
-                        : widget.machine.type == MachineType.washer
-                        ? AppColors.cyan400.withOpacity(0.15)
-                        : Colors.grey.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(child: _buildAnimatedIcon()),
-                ),
-
-                const SizedBox(width: AppSpacing.sm),
-
-                // Machine info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Machine name
-                      Text(
-                        widget.machine.name,
-                        style: AppTypography.bodyLg.copyWith(
-                          color: AppColors.cream800,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      // Status
-                      isFinished
-                          ? Text(
-                              'Finished - Collect now',
-                              style: AppTypography.labelSm.copyWith(
-                                color: AppColors.error,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          : _buildStatusText(remainingMinutes),
-                    ],
-                  ),
-                ),
-
-                // Status indicator
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: isFinished ? AppColors.error : AppColors.orange400,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
             ),
           ),
         ),

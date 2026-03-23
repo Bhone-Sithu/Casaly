@@ -6,6 +6,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../audit/presentation/providers/audit_providers.dart';
+import '../../../audit/domain/entities/audit_log_entry.dart';
 import '../providers/laundry_providers.dart';
 import '../../domain/entities/laundry_machine.dart';
 import 'start_machine_dialog.dart';
@@ -467,10 +469,35 @@ class _MachineCardState extends ConsumerState<MachineCard> {
 
   Future<void> _deleteMachine() async {
     try {
+      print('🧺 DEBUG: About to delete machine (MachineCard)');
       await ref.read(deleteLaundryMachineProvider((
         machineId: widget.machine.id,
         dormId: widget.dormId,
       )));
+      
+      // Log the audit action
+      print('🧺 DEBUG: About to log machine deletion audit action (MachineCard)');
+      final currentUser = ref.read(authStateChangesProvider).asData?.value;
+      if (currentUser != null) {
+        print('🧺 DEBUG: User found: ${currentUser.uid}');
+        final auditLogger = ref.read(auditLoggerProvider);
+        print('🧺 DEBUG: Calling logLaundryAction for machine deletion (MachineCard)');
+        await auditLogger.logLaundryAction(
+          dormId: widget.dormId,
+          action: AuditLogAction.machineRemoved,
+          actorUserId: currentUser.uid,
+          actorDisplayName: currentUser.displayName ?? currentUser.email ?? 'Unknown User',
+          title: 'Machine removed',
+          description: '${currentUser.displayName ?? 'Unknown User'} deleted ${widget.machine.name}',
+          priority: AuditLogPriority.high,
+          machineId: widget.machine.id,
+          machineLabel: widget.machine.name,
+        );
+        print('🧺 DEBUG: Machine deletion audit log completed (MachineCard)');
+      } else {
+        print('🧺 DEBUG: No user found - skipping audit log');
+      }
+      
       widget.onMachineUpdated();
       
       if (mounted) {
