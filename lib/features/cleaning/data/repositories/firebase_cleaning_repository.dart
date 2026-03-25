@@ -1,6 +1,8 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/cleaning_schedule.dart';
 import '../../domain/entities/cleaning_assignment.dart';
 import '../../domain/entities/cleaning_group.dart';
@@ -139,6 +141,23 @@ class FirebaseCleaningRepository implements ICleaningRepository {
       final assignmentsCollection = _assignmentsCollection(assignment.dormId);
       final doc = await assignmentsCollection.add(firestoreData);
       final createdAssignment = assignmentModel.copyWith(id: doc.id);
+      
+      // Trigger notification for new cleaning assignment
+      try {
+        log('DEBUG: Triggering cleaning notification - assignment created');
+        final notificationData = NotificationService.createCleaningNotification(
+          dormId: assignment.dormId,
+          type: 'assigned',
+          message: 'New cleaning assignment for ${assignment.weekLabel}',
+          groupName: assignment.isGroupAssignment ? assignment.assignedGroupId : null,
+          weekDate: assignment.weekLabel,
+        );
+        log('DEBUG: Cleaning assignment notification data created: $notificationData');
+        // TODO: Send notification via Firebase Functions or HTTP request
+      } catch (e) {
+        log('DEBUG: Error creating cleaning assignment notification: $e');
+      }
+      
       return Right(createdAssignment);
     } catch (e) {
       return Left(UnknownFailure('Error creating cleaning assignment: $e'));
@@ -154,6 +173,22 @@ class FirebaseCleaningRepository implements ICleaningRepository {
       await _assignmentsCollection(
         assignment.dormId,
       ).doc(assignment.id).update(assignmentModel.toFirestore());
+
+      // Trigger notification for assignment update (we assume this could be completion)
+      try {
+        log('DEBUG: Triggering cleaning notification - assignment updated');
+        final notificationData = NotificationService.createCleaningNotification(
+          dormId: assignment.dormId,
+          type: 'reminder',
+          message: 'Cleaning assignment updated for ${assignment.weekLabel}',
+          groupName: assignment.isGroupAssignment ? assignment.assignedGroupId : null,
+          weekDate: assignment.weekLabel,
+        );
+        log('DEBUG: Cleaning assignment notification data created: $notificationData');
+        // TODO: Send notification via Firebase Functions or HTTP request
+      } catch (e) {
+        log('DEBUG: Error creating cleaning assignment notification: $e');
+      }
 
       return Right(assignment);
     } catch (e) {

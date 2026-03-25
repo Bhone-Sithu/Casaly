@@ -43,6 +43,19 @@ final updateUserProfileProvider = FutureProvider.family<void, UpdateUserProfileP
   );
 });
 
+final updateFcmTokenProvider = FutureProvider.family<void, UpdateFcmTokenParams>((ref, params) async {
+  final repository = ref.watch(userProfileRepositoryProvider);
+  final result = await repository.updateFcmToken(
+    uid: params.uid,
+    fcmToken: params.fcmToken,
+  );
+
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (success) => success,
+  );
+});
+
 final uploadProfileImageProvider = FutureProvider.family<String, UploadImageParams>((ref, params) async {
   final repository = ref.watch(userProfileRepositoryProvider);
   final result = await repository.uploadProfileImage(params.uid, params.imagePath);
@@ -72,5 +85,15 @@ class UploadImageParams {
   UploadImageParams({
     required this.uid,
     required this.imagePath,
+  });
+}
+
+class UpdateFcmTokenParams {
+  final String uid;
+  final String? fcmToken;
+
+  UpdateFcmTokenParams({
+    required this.uid,
+    required this.fcmToken,
   });
 }

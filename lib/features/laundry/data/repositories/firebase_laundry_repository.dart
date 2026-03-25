@@ -1,6 +1,8 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/laundry_machine.dart';
 import '../../domain/repositories/i_laundry_repository.dart';
 import '../models/laundry_machine_model.dart';
@@ -124,9 +126,26 @@ class FirebaseLaundryRepository implements ILaundryRepository {
       final result = await getLaundryMachine(machineId, dormId);
       return result.fold(
         (failure) => Left(failure),
-        (machine) => machine != null
-            ? Right(machine)
-            : Left(const NotFoundFailure('Machine not found after update')),
+        (machine) {
+          if (machine != null) {
+            // Trigger notification for machine started
+            try {
+              log('DEBUG: Triggering laundry notification - machine started');
+              final notificationData = NotificationService.createLaundryNotification(
+                dormId: dormId,
+                type: 'started',
+                machineName: machine.name,
+                userName: 'Someone', // We don't have user name here
+              );
+              log('DEBUG: Laundry start notification data created: $notificationData');
+              // TODO: Send notification via Firebase Functions or HTTP request
+            } catch (e) {
+              log('DEBUG: Error creating laundry start notification: $e');
+            }
+            return Right(machine);
+          }
+          return Left(const NotFoundFailure('Machine not found after update'));
+        },
       );
     } catch (e) {
       return Left(UnknownFailure('Error starting machine: $e'));
@@ -153,9 +172,26 @@ class FirebaseLaundryRepository implements ILaundryRepository {
       final result = await getLaundryMachine(machineId, dormId);
       return result.fold(
         (failure) => Left(failure),
-        (machine) => machine != null
-            ? Right(machine)
-            : Left(const NotFoundFailure('Machine not found after update')),
+        (machine) {
+          if (machine != null) {
+            // Trigger notification for machine collected (stopped)
+            try {
+              log('DEBUG: Triggering laundry notification - machine collected');
+              final notificationData = NotificationService.createLaundryNotification(
+                dormId: dormId,
+                type: 'collected',
+                machineName: machine.name,
+                userName: 'Someone', // We don't have user name here
+              );
+              log('DEBUG: Laundry collected notification data created: $notificationData');
+              // TODO: Send notification via Firebase Functions or HTTP request
+            } catch (e) {
+              log('DEBUG: Error creating laundry collected notification: $e');
+            }
+            return Right(machine);
+          }
+          return Left(const NotFoundFailure('Machine not found after update'));
+        },
       );
     } catch (e) {
       return Left(UnknownFailure('Error stopping machine: $e'));
@@ -182,9 +218,26 @@ class FirebaseLaundryRepository implements ILaundryRepository {
       final result = await getLaundryMachine(machineId, dormId);
       return result.fold(
         (failure) => Left(failure),
-        (machine) => machine != null
-            ? Right(machine)
-            : Left(const NotFoundFailure('Machine not found after update')),
+        (machine) {
+          if (machine != null) {
+            // Trigger notification for machine finished
+            try {
+              log('DEBUG: Triggering laundry notification - machine finished');
+              final notificationData = NotificationService.createLaundryNotification(
+                dormId: dormId,
+                type: 'finished',
+                machineName: machine.name,
+                userName: 'Auto-Timer', // Auto-finished
+              );
+              log('DEBUG: Laundry finished notification data created: $notificationData');
+              // TODO: Send notification via Firebase Functions or HTTP request
+            } catch (e) {
+              log('DEBUG: Error creating laundry finished notification: $e');
+            }
+            return Right(machine);
+          }
+          return Left(const NotFoundFailure('Machine not found after update'));
+        },
       );
     } catch (e) {
       return Left(UnknownFailure('Error marking machine as finished: $e'));

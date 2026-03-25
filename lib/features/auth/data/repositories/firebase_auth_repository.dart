@@ -10,15 +10,32 @@ import 'package:casaly/features/auth/domain/repositories/i_auth_repository.dart'
 
 class FirebaseAuthRepository implements IAuthRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
-  final GoogleSignIn _googleSignIn;
+  // `google_sign_in` has breaking API changes between 6.x and 7.x.
+  // Using `dynamic` lets us support both without depending on a specific
+  // version at compile time.
+  dynamic _googleSignIn;
   final FirebaseFirestore _firestore;
+
+  dynamic _getOrCreateGoogleSignIn() {
+    if (_googleSignIn != null) return _googleSignIn;
+
+    try {
+      // google_sign_in 7.x uses a singleton: `GoogleSignIn.instance`
+      _googleSignIn = (GoogleSignIn as dynamic).instance;
+    } on NoSuchMethodError {
+      // google_sign_in 6.x uses a public constructor: `GoogleSignIn()`
+      _googleSignIn = (GoogleSignIn as dynamic)();
+    }
+
+    return _googleSignIn;
+  }
 
   FirebaseAuthRepository({
     firebase_auth.FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
     FirebaseFirestore? firestore,
   }) : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _googleSignIn = googleSignIn,
        _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
@@ -122,40 +139,70 @@ class FirebaseAuthRepository implements IAuthRepository {
   @override
   Future<User?> signInWithGoogle() async {
     try {
+      final googleSignIn = _getOrCreateGoogleSignIn();
+
+      // google_sign_in 7.x requires initialize() while 6.x does not.
+      try {
+        await (googleSignIn as dynamic).initialize();
+      } catch (_) {
+        // Ignore if not supported by the installed version.
+      }
+
       developer.log('Starting Google Sign-In process...');
       
       // Check Firebase app configuration
       developer.log('Firebase app: ${firebase_auth.FirebaseAuth.instance.app.name}');
       developer.log('Firebase project ID: ${firebase_auth.FirebaseAuth.instance.app.options.projectId}');
       
-      // Initialize GoogleSignIn with explicit scopes and configuration
+      // Clear any previous sign-in state (both 6.x and 7.x expose signOut()).
       developer.log('Initializing Google Sign-In...');
-      
-      // Clear any previous sign-in state
-      await _googleSignIn.signOut();
-      
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      developer.log('Google user obtained: ${googleUser?.email}');
-      
-      if (googleUser == null) {
-        developer.log('Google Sign-In cancelled by user');
-        return null; // User canceled the sign-in
+      await (googleSignIn as dynamic).signOut();
+
+      // google_sign_in 7.x uses authenticate(), 6.x uses signIn().
+      dynamic googleUser;
+      try {
+        googleUser = await (googleSignIn as dynamic).authenticate();
+      } catch (_) {
+        googleUser = await (googleSignIn as dynamic).signIn();
       }
 
-      developer.log('Getting Google authentication tokens...');
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      developer.log('Access token present: ${googleAuth.accessToken != null}');
-      developer.log('ID token present: ${googleAuth.idToken != null}');
+      if (googleUser == null) {
+        developer.log('Google Sign-In cancelled');
+        return null;
+      }
 
-      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-        developer.log('Missing authentication tokens');
+      developer.log('Google user obtained: ${googleUser.email}');
+
+      developer.log('Getting Google authentication tokens...');
+      final dynamic googleAuth = await googleUser.authentication;
+      String? idToken;
+      String? accessToken;
+
+      try {
+        idToken = googleAuth.idToken;
+      } catch (_) {
+        idToken = null;
+      }
+
+      try {
+        accessToken = googleAuth.accessToken;
+      } catch (_) {
+        accessToken = null;
+      }
+
+      developer.log('ID token present: ${idToken != null}');
+      developer.log('Access token present: ${accessToken != null}');
+
+      if (idToken == null && accessToken == null) {
+        developer.log('Missing Google authentication tokens');
         throw Exception('Failed to obtain Google authentication tokens');
       }
 
       developer.log('Creating Firebase credential...');
-      final firebase_auth.AuthCredential credential = firebase_auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      final firebase_auth.AuthCredential credential =
+          firebase_auth.GoogleAuthProvider.credential(
+        idToken: idToken,
+        accessToken: accessToken,
       );
 
       developer.log('Signing in with Firebase credential...');
@@ -223,10 +270,13 @@ class FirebaseAuthRepository implements IAuthRepository {
 
   @override
   Future<void> signOut() async {
-    await Future.wait([
-      _firebaseAuth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    await _firebaseAuth.signOut();
+    // google_sign_in plugin versions can differ; don't let signOut break.
+    try {
+      await (_getOrCreateGoogleSignIn() as dynamic).signOut();
+    } catch (_) {
+      // Ignore signOut issues from older/newer plugin versions.
+    }
   }
 
   Future<UserModel> _createUserFromFirebaseUser(

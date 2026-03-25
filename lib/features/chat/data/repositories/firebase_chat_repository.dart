@@ -1,7 +1,9 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/entities/chat_room.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -155,6 +157,22 @@ class FirebaseChatRepository implements IChatRepository {
       });
 
       await batch.commit();
+      
+      // Trigger notification for other dorm members
+      try {
+        log('DEBUG: Triggering chat notification for dorm: $dormId');
+        final notificationData = NotificationService.createChatNotification(
+          dormId: dormId,
+          senderName: senderName,
+          message: content,
+        );
+        log('DEBUG: Chat notification data created: $notificationData');
+        // TODO: Send notification via Firebase Functions or HTTP request
+      } catch (e) {
+        log('DEBUG: Error creating chat notification: $e');
+        // Don't fail the message send if notification fails
+      }
+      
       return const Right(null);
     } on FirebaseException catch (e) {
       return Left(ServerFailure('Failed to send message: ${e.message}'));

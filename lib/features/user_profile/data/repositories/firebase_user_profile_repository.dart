@@ -94,6 +94,25 @@ class FirebaseUserProfileRepository implements IUserProfileRepository {
   }
 
   @override
+  Future<Either<Failure, void>> updateFcmToken({
+    required String uid,
+    required String? fcmToken,
+  }) async {
+    try {
+      await _firestore.collection(FirestorePaths.users).doc(uid).set({
+        'fcmToken': fcmToken,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return const Right(null);
+    } on FirebaseException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Failed to update FCM token', code: e.code));
+    } catch (e) {
+      return Left(UnknownFailure('Failed to update FCM token: $e'));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> uploadProfileImage(String uid, String imagePath) async {
     try {
       final file = File(imagePath);
