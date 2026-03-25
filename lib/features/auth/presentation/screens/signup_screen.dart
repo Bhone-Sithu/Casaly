@@ -19,6 +19,7 @@ class SignUpScreen extends ConsumerStatefulWidget {
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -27,6 +28,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   void dispose() {
+    _displayNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -42,9 +44,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     try {
       
       final user = await ref.read(authRepositoryProvider).createUserWithEmailAndPassword(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _displayNameController.text.trim(),
+      );
       
       if (mounted && user != null) {
         context.go('/dorm-selection');
@@ -227,6 +230,28 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 
                 // Email Field
+                CasalyTextField(
+                  controller: _displayNameController,
+                  label: 'Display name',
+                  hint: 'How should we call you?',
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    final trimmed = value?.trim() ?? '';
+                    if (trimmed.isEmpty) {
+                      return 'Please enter your display name';
+                    }
+                    if (trimmed.length < 2) {
+                      return 'Display name must be at least 2 characters';
+                    }
+                    if (trimmed.length > 30) {
+                      return 'Display name must be at most 30 characters';
+                    }
+                    return null;
+                  },
+                ),
+                
+                const SizedBox(height: AppSpacing.lg),
+                
                 CasalyTextField(
                   controller: _emailController,
                   label: 'Email',

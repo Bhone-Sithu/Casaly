@@ -47,9 +47,10 @@ class AuditLogCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: Center(
-              child: Text(
-                logEntry.icon,
-                style: const TextStyle(fontSize: 16),
+              child: Icon(
+                _getIconData(logEntry.icon),
+                size: 18,
+                color: _getPriorityColor(),
               ),
             ),
           ),
@@ -224,6 +225,51 @@ class AuditLogCard extends StatelessWidget {
         return Icons.person;
       default:
         return Icons.info;
+    }
+  }
+
+  IconData _getIconData(AuditLogIcon icon) {
+    switch (icon) {
+      case AuditLogIcon.dormHome:
+        return Icons.home;
+      case AuditLogIcon.dormExit:
+        return Icons.exit_to_app;
+      case AuditLogIcon.memberPromoted:
+        return Icons.verified;
+      case AuditLogIcon.memberDemoted:
+        return Icons.person_remove;
+      case AuditLogIcon.calendar:
+        return Icons.calendar_month;
+      case AuditLogIcon.cleaningDone:
+        return Icons.check_circle;
+      case AuditLogIcon.cleaningMissed:
+        return Icons.cancel;
+      case AuditLogIcon.swap:
+        return Icons.swap_horiz;
+      case AuditLogIcon.cleaningGroup:
+        return Icons.people_alt;
+      case AuditLogIcon.machineAdded:
+        return Icons.add_circle_outline;
+      case AuditLogIcon.machineRemoved:
+        return Icons.remove_circle_outline;
+      case AuditLogIcon.machineStarted:
+        return Icons.play_arrow;
+      case AuditLogIcon.machineFinished:
+        return Icons.check_circle_outline;
+      case AuditLogIcon.machineAvailable:
+        return Icons.refresh;
+      case AuditLogIcon.machineBroken:
+        return Icons.warning_amber_rounded;
+      case AuditLogIcon.machineFixed:
+        return Icons.build;
+      case AuditLogIcon.announcement:
+        return Icons.campaign;
+      case AuditLogIcon.shoppingCart:
+        return Icons.shopping_cart;
+      case AuditLogIcon.shoppingPurchased:
+        return Icons.checklist;
+      case AuditLogIcon.shoppingRemoved:
+        return Icons.delete_outline;
     }
   }
 

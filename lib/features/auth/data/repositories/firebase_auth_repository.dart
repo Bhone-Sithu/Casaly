@@ -53,7 +53,11 @@ class FirebaseAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<User?> createUserWithEmailAndPassword(String email, String password) async {
+  Future<User?> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -66,9 +70,16 @@ class FirebaseAuthRepository implements IAuthRepository {
         developer.log('Firebase user is null after signup');
         return null;
       }
+
+      // Ensure the Firebase Auth profile has the display name (used by
+      // downstream streams and to keep data consistent across sign-in methods).
+      await firebaseUser.updateDisplayName(displayName);
       
       developer.log('Creating user document in Firestore for: ${firebaseUser.uid}');
-      return await _createUserFromFirebaseUser(firebaseUser);
+      return await _createUserFromFirebaseUser(
+        firebaseUser,
+        displayNameOverride: displayName,
+      );
     } on firebase_auth.FirebaseAuthException catch (e) {
       
       developer.log('Firebase Auth Exception during signup:');
@@ -218,19 +229,27 @@ class FirebaseAuthRepository implements IAuthRepository {
     ]);
   }
 
-  Future<UserModel> _createUserFromFirebaseUser(firebase_auth.User firebaseUser) async {
+  Future<UserModel> _createUserFromFirebaseUser(
+    firebase_auth.User firebaseUser, {
+    String? displayNameOverride,
+  }) async {
     try {
       developer.log('Creating UserModel for: ${firebaseUser.uid}');
+      final resolvedDisplayName =
+          displayNameOverride ??
+          firebaseUser.displayName ??
+          firebaseUser.email?.split('@').first ??
+          'Unknown User';
       final userModel = UserModel(
         uid: firebaseUser.uid,
         email: firebaseUser.email!,
-        displayName: firebaseUser.displayName,
+        displayName: resolvedDisplayName,
       );
 
       developer.log('Saving user document to Firestore...');
       // Create user document in Firestore
       await _firestore.collection(FirestorePaths.users).doc(firebaseUser.uid).set({
-        'displayName': firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? 'Unknown User',
+        'displayName': resolvedDisplayName,
         'email': firebaseUser.email!,
         'createdAt': FieldValue.serverTimestamp(),
         'dormId': null,

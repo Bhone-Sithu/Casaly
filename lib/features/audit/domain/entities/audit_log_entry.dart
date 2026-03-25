@@ -46,6 +46,29 @@ enum AuditLogPriority {
   urgent, // Critical actions (emergencies, rule violations)
 }
 
+enum AuditLogIcon {
+  dormHome,
+  dormExit,
+  memberPromoted,
+  memberDemoted,
+  calendar,
+  cleaningDone,
+  cleaningMissed,
+  swap,
+  cleaningGroup,
+  machineAdded,
+  machineRemoved,
+  machineStarted,
+  machineFinished,
+  machineAvailable,
+  machineBroken,
+  machineFixed,
+  announcement,
+  shoppingCart,
+  shoppingPurchased,
+  shoppingRemoved,
+}
+
 class AuditLogEntry extends Equatable {
   final String id;
   final String dormId;
@@ -132,59 +155,59 @@ class AuditLogEntry extends Equatable {
   }
 
   /// Get icon for the audit log action
-  String get icon {
+  AuditLogIcon get icon {
     switch (action) {
       case AuditLogAction.dormCreated:
       case AuditLogAction.dormJoined:
-        return '🏠';
+        return AuditLogIcon.dormHome;
       case AuditLogAction.dormLeft:
-        return '👋';
+        return AuditLogIcon.dormExit;
       case AuditLogAction.memberPromoted:
-        return '👑';
+        return AuditLogIcon.memberPromoted;
       case AuditLogAction.memberDemoted:
-        return '👤';
+        return AuditLogIcon.memberDemoted;
       
       case AuditLogAction.cleaningScheduleCreated:
       case AuditLogAction.cleaningAssignmentChanged:
-        return '📅';
+        return AuditLogIcon.calendar;
       case AuditLogAction.cleaningMarkedDone:
-        return '✅';
+        return AuditLogIcon.cleaningDone;
       case AuditLogAction.cleaningMarkedMissed:
-        return '❌';
+        return AuditLogIcon.cleaningMissed;
       case AuditLogAction.cleaningSwapRequested:
       case AuditLogAction.cleaningSwapAccepted:
       case AuditLogAction.cleaningSwapRejected:
-        return '🔄';
+        return AuditLogIcon.swap;
       case AuditLogAction.cleaningGroupCreated:
       case AuditLogAction.cleaningGroupUpdated:
       case AuditLogAction.cleaningGroupMemberAdded:
       case AuditLogAction.cleaningGroupMemberRemoved:
-        return '👥';
+        return AuditLogIcon.cleaningGroup;
       
       case AuditLogAction.machineAdded:
-        return '➕';
+        return AuditLogIcon.machineAdded;
       case AuditLogAction.machineRemoved:
-        return '➖';
+        return AuditLogIcon.machineRemoved;
       case AuditLogAction.machineStarted:
-        return '▶️';
+        return AuditLogIcon.machineStarted;
       case AuditLogAction.machineFinished:
-        return '✅';
+        return AuditLogIcon.machineFinished;
       case AuditLogAction.machineMarkedAvailable:
-        return '🆓';
+        return AuditLogIcon.machineAvailable;
       case AuditLogAction.machineBroken:
-        return '⚠️';
+        return AuditLogIcon.machineBroken;
       case AuditLogAction.machineFixed:
-        return '🔧';
+        return AuditLogIcon.machineFixed;
       
       case AuditLogAction.announcementPosted:
-        return '📢';
+        return AuditLogIcon.announcement;
       
       case AuditLogAction.shoppingListItemAdded:
-        return '🛒';
+        return AuditLogIcon.shoppingCart;
       case AuditLogAction.shoppingListItemPurchased:
-        return '✅';
+        return AuditLogIcon.shoppingPurchased;
       case AuditLogAction.shoppingListItemRemoved:
-        return '🗑️';
+        return AuditLogIcon.shoppingRemoved;
     }
   }
 
